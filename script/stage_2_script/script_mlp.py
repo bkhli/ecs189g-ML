@@ -13,7 +13,7 @@ import torch
 
 #---- Multi-Layer Perceptron script ----
 if 1:
-    path_var = "../../" # or ""
+    path_var = "" # "../../" or ""
     #---- parameter section -------------------------------
     np.random.seed(2)
     torch.manual_seed(2)
