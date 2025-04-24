@@ -13,28 +13,29 @@ import torch
 
 #---- Multi-Layer Perceptron script ----
 if 1:
+    path_var = "../../" # or ""
     #---- parameter section -------------------------------
     np.random.seed(2)
     torch.manual_seed(2)
     #------------------------------------------------------
 
-    # ---- objection initialization setction ---------------
+    # ---- objection initialization section ---------------
     data_obj = Dataset_Loader('mlp_train', '')
-    data_obj.dataset_source_folder_path = 'data/stage_2_data/'
+    data_obj.dataset_source_folder_path = path_var + 'data/stage_2_data/'
     data_obj.dataset_source_file_name = 'train.csv'
     
     testdata_obj = Dataset_Loader('mlp_test', '')
-    testdata_obj.dataset_source_folder_path = 'data/stage_2_data/'
+    testdata_obj.dataset_source_folder_path = path_var + 'data/stage_2_data/'
     testdata_obj.dataset_source_file_name = 'test.csv'
 
     #method_obj = Method_MLP_four_layer('multi-layer perceptron', '')
     method_obj = Method_MLP('multi-layer perceptron', '')
 
     result_obj = Result_Saver('saver', '')
-    result_obj.result_destination_folder_path = 'result/stage_2_result/MLP_'
+    result_obj.result_destination_folder_path = path_var + 'result/stage_2_result/MLP_'
     result_obj.result_destination_file_name = 'prediction_result'
 
-    setting_obj = Setting_Train_Test('k fold cross validation', '')
+    setting_obj = Setting_Train_Test('Full Batch', '')
     #setting_obj = Setting_Tra
     # in_Test_Split('train test split', '')
 
@@ -50,16 +51,21 @@ if 1:
 
     # ---- running section ---------------------------------
     print('************ Start ************')
-    setting_obj.prepare(data_obj, testdata_obj, method_obj, result_obj, evaluate_obj_acc, evaluate_obj_f1_none, 
+    setting_obj.prepare(data_obj, testdata_obj, method_obj, result_obj, evaluate_obj_acc, evaluate_obj_f1_none,
                         evaluate_obj_f1_macro, evaluate_obj_f1_micro, evaluate_obj_f1_weighted)
     # print('Should be done training here???')
     setting_obj.print_setup_summary()
     mean_score, f1_none, f1_macro, f1_micro, f1_weighted = setting_obj.load_run_save_evaluate()
-    # mean_score, 
+    # mean_score,
     print('************ Overall Performance ************')
-    print('MLP Accuracy: ' + str(mean_score) + ' , Multilabel Classification: ' + str(f1_none) + ' , F1 Macro: ' + str(f1_macro)
-          + ' , F1 Micro: ' + str(f1_micro) + ' , F1 Weighted: ' + str(f1_weighted))
-
+    print(
+        f"\nMLP Test Accuracy: {mean_score:.4f}\n"
+        f"F1 Scores:\n"
+        f"\tIndividual: {[f'{score:.4f}' for score in f1_none]}\n"
+        f"\tMacro:     {f1_macro:.4f}\n"
+        f"\tMicro:     {f1_micro:.4f}\n"
+        f"\tWeighted:  {f1_weighted:.4f}"
+    )
     # setting_obj.prepare(data_obj, testdata_obj, method_obj, result_obj, evaluate_obj_f1)
     # setting_obj.print_setup_summary()
     # mean_score, std_score = setting_obj.load_run_save_evaluate()

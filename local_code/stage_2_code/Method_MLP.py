@@ -8,6 +8,7 @@ Concrete MethodModule class for a specific learning MethodModule
 from local_code.base_class.method import method
 from local_code.stage_2_code.Evaluate_Accuracy import Evaluate_Accuracy
 from local_code.stage_2_code.Evaluate_F1 import Evaluate_F1_None, Evaluate_F1_Macro, Evaluate_F1_Micro, Evaluate_F1_Weighted
+from local_code.stage_2_code.Graph_Loss import TrainLoss
 import torch
 from torch import nn
 import numpy as np
@@ -79,6 +80,7 @@ class Method_MLP(method, nn.Module):
         # it will be an iterative gradient updating process
         # we don't do mini-batch, we use the whole input as one batch
         # you can try to split X and y into smaller-sized batches by yourself
+        loss_tracker = TrainLoss()
         for epoch in range(self.max_epoch): # you can do an early stop if self.max_epoch is too much...
             # get the output, we need to covert X into torch.tensor so pytorch algorithm can operate on it
             y_pred = self.forward(X)
@@ -94,16 +96,27 @@ class Method_MLP(method, nn.Module):
             # update the variables according to the optimizer and the gradients calculated by the above loss.backward function
             optimizer.step()
 
+            if epoch%5 ==0:
+                loss_tracker.add_epoch(epoch, train_loss.item())
             if epoch%100 == 0:
                 accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
                 f1_evaluator_none.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
                 f1_evaluator_macro.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
                 f1_evaluator_micro.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
                 f1_evaluator_weighted.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
-                print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Mutlilabel Classification:', f1_evaluator_none.evaluate(), 
-                      'F1 Score - Macro:', f1_evaluator_macro.evaluate(), 'F1 Score - Micro:', f1_evaluator_micro.evaluate(), 
-                      'F1 Score - Weighted:', f1_evaluator_weighted.evaluate(), 'Loss:', train_loss.item())
-    
+                # print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Mutlilabel Classification:', f1_evaluator_none.evaluate(),
+                #       'F1 Score - Macro:', f1_evaluator_macro.evaluate(), 'F1 Score - Micro:', f1_evaluator_micro.evaluate(),
+                #       'F1 Score - Weighted:', f1_evaluator_weighted.evaluate(), 'Loss:', train_loss.item())
+                print(
+                    f"\nEpoch: {epoch} | Train Accuracy: {accuracy_evaluator.evaluate():.4f} | Loss: {train_loss.item():.4f}\n"
+                    f"F1 Scores:\n"
+                    f"\tIndividual: {[f'{score:.4f}' for score in f1_evaluator_none.evaluate()]}\n"
+                    f"\tMacro:     {f1_evaluator_macro.evaluate():.4f}\n"
+                    f"\tMicro:     {f1_evaluator_micro.evaluate():.4f}\n"
+                    f"\tWeighted:  {f1_evaluator_micro.evaluate():.4f}"
+                )
+        loss_tracker.show_graph_loss()
+
     def test(self, X):
         # do the testing, and result the result
         y_pred = self.forward(torch.FloatTensor(np.array(X)).to(device))
