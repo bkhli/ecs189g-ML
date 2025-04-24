@@ -6,7 +6,8 @@ Concrete MethodModule class for a specific learning MethodModule
 # License: TBD
 
 from local_code.base_class.method import method
-from local_code.stage_1_code.Evaluate_Accuracy import Evaluate_Accuracy
+from local_code.stage_2_code.Evaluate_Accuracy import Evaluate_Accuracy
+from local_code.stage_2_code.Evaluate_F1 import Evaluate_F1_None, Evaluate_F1_Macro, Evaluate_F1_Micro, Evaluate_F1_Weighted
 import torch
 from torch import nn
 import numpy as np
@@ -66,8 +67,14 @@ class Method_MLP(method, nn.Module):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         # check here for the nn.CrossEntropyLoss doc: https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
         loss_function = nn.CrossEntropyLoss()
+        #loss_function = nn.MSELoss()
+
         # for training accuracy investigation purpose
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
+        f1_evaluator_none = Evaluate_F1_None('multilabel classification', '')
+        f1_evaluator_macro = Evaluate_F1_Macro('multilabel classification', '')
+        f1_evaluator_micro = Evaluate_F1_Micro('multilabel classification', '')
+        f1_evaluator_weighted = Evaluate_F1_Weighted('multilabel classification', '')
 
         # it will be an iterative gradient updating process
         # we don't do mini-batch, we use the whole input as one batch
@@ -89,7 +96,13 @@ class Method_MLP(method, nn.Module):
 
             if epoch%100 == 0:
                 accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
-                print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
+                f1_evaluator_none.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                f1_evaluator_macro.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                f1_evaluator_micro.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                f1_evaluator_weighted.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Mutlilabel Classification:', f1_evaluator_none.evaluate(), 
+                      'F1 Score - Macro:', f1_evaluator_macro.evaluate(), 'F1 Score - Micro:', f1_evaluator_micro.evaluate(), 
+                      'F1 Score - Weighted:', f1_evaluator_weighted.evaluate(), 'Loss:', train_loss.item())
     
     def test(self, X):
         # do the testing, and result the result
