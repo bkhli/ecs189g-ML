@@ -2,8 +2,8 @@ from local_code.stage_2_code.Dataset_Loader import Dataset_Loader
 from local_code.stage_2_code.Method_MLP import Method_MLP
 
 # to test different (earlier models), but had to change names so that it works
-# from local_code.stage_2_code.Method_MLP_first_working import Method_MLP_first_working
-# from local_code.stage_2_code.Method_MLP_four_layer import Method_MLP_four_layer
+# from local_code.stage_2_code.Method_MLP_first_working import Method_MLP
+# from local_code.stage_2_code.Method_MLP_four_layer import Method_MLP
 from local_code.stage_2_code.Result_Saver import Result_Saver
 from local_code.stage_2_code.Setting import Setting_Train_Test
 from local_code.stage_2_code.Evaluate_Accuracy import Evaluate_Accuracy
