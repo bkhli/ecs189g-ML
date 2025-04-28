@@ -10,6 +10,7 @@ from local_code.stage_1_code.Evaluate_Accuracy import Evaluate_Accuracy
 import torch
 from torch import nn
 import numpy as np
+from icecream import ic
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("torch running with", device)
@@ -27,15 +28,28 @@ class Method_MLP(method, nn.Module):
     def __init__(self, mName, mDescription):
         method.__init__(self, mName, mDescription)
         nn.Module.__init__(self)
-        # check here for nn.Linear doc: https://pytorch.org/docs/stable/generated/torch.nn.Linear.html
-        self.fc_layer_1 = nn.Linear(784, 256).to(device)
-        # check here for nn.ReLU doc: https://pytorch.org/docs/stable/generated/torch.nn.ReLU.html
+        
+        n1 = 5
+        n2 = 10
+
+        # input Image size: 28x28 (the images are gray-scale with only one channel)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=n1, kernel_size=5).to(device)  # doc: https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html#torch.nn.Conv2d
+        # output size: 28 + 2 * 0 - 5 + 1 = 24        
+        self.pool1 = nn.MaxPool2d(kernel_size=2).to(device)  # doc: https://pytorch.org/docs/stable/generated/torch.nn.MaxPool2d.html#torch.nn.MaxPool2d
+        # output size: 12 x 12
+        self.conv2 = nn.Conv2d(in_channels=n1, out_channels=n2, kernel_size=5).to(device)
+        # output size: 8 x 8
+        self.pool2 = nn.MaxPool2d(kernel_size=2).to(device)
+        # output size: 4 x 4
+
+        # completely flat to 1D
+        self.flatten = nn.Flatten().to(device)
+        
+        n3 = 4 * 4 * n2
+        self.fc_layer_1 = nn.Linear(n3, 64).to(device)
         self.activation_func_1 = nn.ReLU().to(device)
-        self.fc_layer_2 = nn.Linear(256, 64).to(device)
-        # check here for nn.Softmax doc: https://pytorch.org/docs/stable/generated/torch.nn.Softmax.html
-        self.activation_func_2 = nn.ReLU().to(device)
-        self.fc_layer_3 = nn.Linear(64, 10).to(device)
-        self.activation_func_3 = nn.Softmax(dim=1).to(device)
+
+        self.fc_layer_2 = nn.Linear(64, 10).to(device)
 
 
     # it defines the forward propagation function for input x
@@ -44,21 +58,31 @@ class Method_MLP(method, nn.Module):
     def forward(self, x) -> torch.Tensor:
         '''Forward propagation'''
         # hidden layer embeddings
-        h = self.activation_func_1(self.fc_layer_1(x))
-        # outout layer result
-        # self.fc_layer_2(h) will be a n x 10 tensor
-        # n (denotes the input instance number): 0th dimension; 10 (denotes the class number): 1st dimension
-        # we do softmax along dim=1 to get the normalized classification probability distributions for each instance
-        # y_pred = self.activation_func_2(self.fc_layer_2(h))
-        h2 = self.activation_func_2(self.fc_layer_2(h))
-        y_pred = self.activation_func_3(self.fc_layer_3(h2))
+        # ic(x.shape)
+        
+        imagefeatures1 = self.pool1(self.conv1(x))
+        imagefeatures2 = self.pool2(self.conv2(imagefeatures1))
+        
+        flattend = self.flatten(imagefeatures2)
+
+        h = self.activation_func_1(self.fc_layer_1(flattend))
+        y_pred = self.fc_layer_2(h)
         return y_pred
 
     # backward error propagation will be implemented by pytorch automatically
     # so we don't need to define the error backpropagation function here
 
     def train(self, X, y):
+        ic(len(y))
+        ic(len(X))
+        # ic(X[0])
+        ic(y[0])
+
+        # X is image
+        # y is label
+
         X = torch.FloatTensor(np.array(X)).to(device)
+        ic(X.shape)
         # convert y to torch.tensor as well
         y_true = torch.LongTensor(np.array(y)).to(device)
 
