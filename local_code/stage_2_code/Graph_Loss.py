@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import numpy as np
 
 
 class TrainLoss:
@@ -18,4 +19,7 @@ class TrainLoss:
         plt.grid(True)
         plt.legend()
         plt.show()
+
+    def save_data(self, filename):
+        np.save(filename, [self.epochs, self.loss])
 

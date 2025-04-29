@@ -35,7 +35,7 @@ class Method_MLP(method, nn.Module):
         self.activation_func_1 = nn.ReLU().to(device)
         self.fc_layer_2 = nn.Linear(20, 10).to(device)
         # check here for nn.Softmax doc: https://pytorch.org/docs/stable/generated/torch.nn.Softmax.html
-        self.activation_func_2 = nn.Softmax(dim=1).to(device)
+        # self.activation_func_2 = nn.Softmax(dim=1).to(device)
 
     # it defines the forward propagation function for input x
     # this function will calculate the output layer by layer
@@ -48,7 +48,7 @@ class Method_MLP(method, nn.Module):
         # self.fc_layer_2(h) will be a n x 10 tensor
         # n (denotes the input instance number): 0th dimension; 10 (denotes the class number): 1st dimension
         # we do softmax along dim=1 to get the normalized classification probability distributions for each instance
-        y_pred = self.activation_func_2(self.fc_layer_2(h))
+        y_pred = self.fc_layer_2(h)
         return y_pred
 
     # backward error propagation will be implemented by pytorch automatically
@@ -109,6 +109,7 @@ class Method_MLP(method, nn.Module):
                     f"\tWeighted:  {f1_evaluator_micro.evaluate():.4f}"
                 )
         loss_tracker.show_graph_loss()
+        loss_tracker.save_data("2-layer-nosoft")
     
     def test(self, X):
         # do the testing, and result the result

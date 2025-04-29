@@ -39,7 +39,7 @@ class Method_MLP(method, nn.Module):
         self.fc_layer_3 = nn.Linear(64, 16).to(device)
         self.activation_func_3 = nn.ReLU().to(device)
         self.fc_layer_4 = nn.Linear(16, 10).to(device)
-        self.activation_func_4 = nn.Softmax(dim=1).to(device)
+        # self.activation_func_4 = nn.Softmax(dim=1).to(device)
 
 
     # it defines the forward propagation function for input x
@@ -56,7 +56,8 @@ class Method_MLP(method, nn.Module):
         # y_pred = self.activation_func_2(self.fc_layer_2(h))
         h2 = self.activation_func_2(self.fc_layer_2(h))
         h3= self.activation_func_3(self.fc_layer_3(h2))
-        y_pred = self.activation_func_4(self.fc_layer_4(h3))
+        # y_pred = self.activation_func_4(self.fc_layer_4(h3))
+        y_pred = self.fc_layer_4(h3)
         return y_pred
 
     # backward error propagation will be implemented by pytorch automatically
@@ -118,6 +119,7 @@ class Method_MLP(method, nn.Module):
                     f"\tWeighted:  {f1_evaluator_micro.evaluate():.4f}"
                 )
         loss_tracker.show_graph_loss()
+        loss_tracker.save_data("4-layer-nosoft")
     
     def test(self, X):
         # do the testing, and result the result

@@ -37,7 +37,7 @@ class Method_MLP(method, nn.Module):
         # check here for nn.Softmax doc: https://pytorch.org/docs/stable/generated/torch.nn.Softmax.html
         self.activation_func_2 = nn.ReLU().to(device)
         self.fc_layer_3 = nn.Linear(64, 10).to(device)
-        self.activation_func_3 = nn.Softmax(dim=1).to(device)
+        # self.activation_func_3 = nn.Softmax(dim=1).to(device)
 
 
     # it defines the forward propagation function for input x
@@ -53,7 +53,8 @@ class Method_MLP(method, nn.Module):
         # we do softmax along dim=1 to get the normalized classification probability distributions for each instance
         # y_pred = self.activation_func_2(self.fc_layer_2(h))
         h2 = self.activation_func_2(self.fc_layer_2(h))
-        y_pred = self.activation_func_3(self.fc_layer_3(h2))
+        # y_pred = self.activation_func_3(self.fc_layer_3(h2))
+        y_pred = self.fc_layer_3(h2)
         return y_pred
 
     # backward error propagation will be implemented by pytorch automatically
@@ -65,10 +66,13 @@ class Method_MLP(method, nn.Module):
         y_true = torch.LongTensor(np.array(y)).to(device)
 
         # check here for the torch.optim doc: https://pytorch.org/docs/stable/optim.html
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=1e-1)
         # check here for the nn.CrossEntropyLoss doc: https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
         loss_function = nn.CrossEntropyLoss()
+        # log_softmax = nn.LogSoftmax(dim=1)
+        # loss_function = nn.NLLLoss()
         #loss_function = nn.MSELoss()
+        # loss_function = nn.BCEWithLogitsLoss()
 
         # for training accuracy investigation purpose
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
@@ -86,6 +90,7 @@ class Method_MLP(method, nn.Module):
             y_pred = self.forward(X)
             # calculate the training loss
             train_loss = loss_function(y_pred, y_true)
+            # train_loss = loss_function(log_softmax(y_pred), y_true)
 
             # check here for the gradient init doc: https://pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html
             optimizer.zero_grad()
@@ -116,13 +121,14 @@ class Method_MLP(method, nn.Module):
                     f"\tWeighted:  {f1_evaluator_micro.evaluate():.4f}"
                 )
         loss_tracker.show_graph_loss()
+        # loss_tracker.save_data("2-Decay")
+
 
     def test(self, X):
         # do the testing, and result the result
         y_pred = self.forward(torch.FloatTensor(np.array(X)).to(device))
         # convert the probability distributions to the corresponding labels
         # instances will get the labels corresponding to the largest probability
-
         return y_pred.max(1)[1].cpu()
     
     def run(self):
