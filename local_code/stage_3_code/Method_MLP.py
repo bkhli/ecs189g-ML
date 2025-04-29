@@ -12,7 +12,7 @@ from torch import nn
 import numpy as np
 from icecream import ic
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 print("torch running with", device)
 
 class Method_MLP(method, nn.Module):
