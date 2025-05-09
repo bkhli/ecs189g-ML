@@ -7,7 +7,7 @@ Concrete MethodModule class for a specific learning MethodModule
 
 from local_code.base_class.method import method
 from local_code.stage_3_code.Evaluate_Accuracy import Evaluate_Accuracy
-from local_code.stage_3_code.CIFAR_Batcher import CIFARDataset
+from local_code.stage_3_code.CIFAR_Batcher import CIFAR_Dataset
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -102,7 +102,7 @@ class Method_MLP(method, nn.Module):
         # we don't do mini-batch, we use the whole input as one batch
         # you can try to split X and y into smaller-sized batches by yourself
 
-        train_dataset = CIFARDataset(X, y)
+        train_dataset = CIFAR_Dataset(X, y)
         train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=0)
         for epoch in range(self.max_epoch): # you can do an early stop if self.max_epoch is too much...
             print(epoch)

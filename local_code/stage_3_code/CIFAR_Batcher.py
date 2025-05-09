@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset
 import numpy as np
 
-class CIFARDataset(Dataset):
+class CIFAR_Dataset(Dataset):
     def __init__(self, X, y):
         self.X = torch.tensor(np.array(X), dtype=torch.float32) / 255.0  # normalize
         self.y = torch.tensor(np.array(y), dtype=torch.long)
