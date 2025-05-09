@@ -105,8 +105,8 @@ class Method_MLP(method, nn.Module):
         # you can try to split X and y into smaller-sized batches by yourself
 
         # train_dataset = CIFAR_Dataset(X, y)
-        X_tensor = torch.tensor(np.array( X ), dtype=torch.float32) / 255
-        y_tensor = torch.tensor(np.array( y ), dtype=torch.long)
+        X_tensor = torch.tensor(np.array( X ), dtype=torch.float32).to(device=device) / 255
+        y_tensor = torch.tensor(np.array( y ), dtype=torch.long).to(device=device)
         train_dataset = TensorDataset(X_tensor, y_tensor)
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0)
         for epoch in range(self.max_epoch): # you can do an early stop if self.max_epoch is too much...
@@ -135,7 +135,7 @@ class Method_MLP(method, nn.Module):
                     print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
     
     def test(self, X):
-        X_tensor = torch.tensor(np.array( X ), dtype=torch.float32) / 255
+        X_tensor = torch.tensor(np.array( X ), dtype=torch.float32).to(device=device) / 255
         test_dataset = TensorDataset(X_tensor)
         test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=0)
 
