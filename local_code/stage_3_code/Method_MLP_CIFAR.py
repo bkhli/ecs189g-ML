@@ -10,7 +10,7 @@ from local_code.stage_3_code.Evaluate_Accuracy import Evaluate_Accuracy
 from local_code.stage_3_code.CIFAR_Batcher import CIFAR_Dataset
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 from icecream import ic
 
@@ -20,9 +20,11 @@ print("torch running with", device)
 class Method_MLP(method, nn.Module):
     data = None
     # it defines the max rounds to train the model
-    max_epoch = 500
+    max_epoch = 200
     # it defines the learning rate for gradient descent based optimizer for model learning
     learning_rate = 1e-3
+
+    batch_size = 64 # Number of training instances to be computed at once
 
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
@@ -102,8 +104,11 @@ class Method_MLP(method, nn.Module):
         # we don't do mini-batch, we use the whole input as one batch
         # you can try to split X and y into smaller-sized batches by yourself
 
-        train_dataset = CIFAR_Dataset(X, y)
-        train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=0)
+        # train_dataset = CIFAR_Dataset(X, y)
+        X_tensor = torch.tensor(np.array( X ), dtype=torch.float32) / 255
+        y_tensor = torch.tensor(np.array( y ), dtype=torch.long)
+        train_dataset = TensorDataset(X_tensor, y_tensor)
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0)
         for epoch in range(self.max_epoch): # you can do an early stop if self.max_epoch is too much...
             print(epoch)
 
@@ -130,12 +135,26 @@ class Method_MLP(method, nn.Module):
                     print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
     
     def test(self, X):
+        X_tensor = torch.tensor(np.array( X ), dtype=torch.float32) / 255
+        test_dataset = TensorDataset(X_tensor)
+        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=0)
+
+        y_preds = []
+
+        # self.eval()
+        with torch.no_grad():
+            for (X,) in test_loader:
+                outputs = self.forward(X)
+                batch_preds = outputs.max(1)[1].cpu()
+                y_preds.append(batch_preds)
+        return torch.cat(y_preds)
+
         # do the testing, and result the result
-        y_pred = self.forward(torch.FloatTensor(np.array(X)).to(device))
         # convert the probability distributions to the corresponding labels
         # instances will get the labels corresponding to the largest probability
 
-        return y_pred.max(1)[1].cpu()
+        # y_pred = self.forward(torch.FloatTensor(np.array(X)).to(device))
+        # return y_pred.max(1)[1].cpu()
     
     def run(self):
         print('method running...')
@@ -144,3 +163,4 @@ class Method_MLP(method, nn.Module):
         print('--start testing...')
         pred_y = self.test(self.data['test']['X'])
         return {'pred_y': pred_y, 'true_y': self.data['test']['y']}
+
