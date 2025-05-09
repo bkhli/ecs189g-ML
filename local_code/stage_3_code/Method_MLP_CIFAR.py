@@ -7,8 +7,10 @@ Concrete MethodModule class for a specific learning MethodModule
 
 from local_code.base_class.method import method
 from local_code.stage_3_code.Evaluate_Accuracy import Evaluate_Accuracy
+from local_code.stage_3_code.CIFAR_Batcher import CIFARDataset
 import torch
 from torch import nn
+from torch.utils.data import DataLoader
 import numpy as np
 from icecream import ic
 
@@ -83,10 +85,11 @@ class Method_MLP(method, nn.Module):
         # X is image
         # y is label
 
-        X = torch.FloatTensor(np.array(X)).to(device)
-        ic(X.shape)
+        # X = torch.FloatTensor(np.array(X)).to(device)
+        # y_true = torch.LongTensor(np.array(y)).to(device)
+        # ic(X.shape)
+        # ic(X[0])
         # convert y to torch.tensor as well
-        y_true = torch.LongTensor(np.array(y)).to(device)
 
         # check here for the torch.optim doc: https://pytorch.org/docs/stable/optim.html
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -98,24 +101,33 @@ class Method_MLP(method, nn.Module):
         # it will be an iterative gradient updating process
         # we don't do mini-batch, we use the whole input as one batch
         # you can try to split X and y into smaller-sized batches by yourself
+
+        train_dataset = CIFARDataset(X, y)
+        train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=0)
         for epoch in range(self.max_epoch): # you can do an early stop if self.max_epoch is too much...
-            # get the output, we need to covert X into torch.tensor so pytorch algorithm can operate on it
-            y_pred = self.forward(X)
-            # calculate the training loss
-            train_loss = loss_function(y_pred, y_true)
+            print(epoch)
 
-            # check here for the gradient init doc: https://pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html
-            optimizer.zero_grad()
-            # check here for the loss.backward doc: https://pytorch.org/docs/stable/generated/torch.Tensor.backward.html
-            # do the error backpropagation to calculate the gradients
-            train_loss.backward()
-            # check here for the opti.step doc: https://pytorch.org/docs/stable/optim.html
-            # update the variables according to the optimizer and the gradients calculated by the above loss.backward function
-            optimizer.step()
+            for idx, (X, y_true) in enumerate(train_loader):
+                # ic(X.shape)
+                # ic(y_true.shape)
 
-            if epoch%100 == 0:
-                accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
-                print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
+                # get the output, we need to covert X into torch.tensor so pytorch algorithm can operate on it
+                y_pred = self.forward(X)
+                # calculate the training loss
+                train_loss = loss_function(y_pred, y_true)
+
+                # check here for the gradient init doc: https://pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html
+                optimizer.zero_grad()
+                # check here for the loss.backward doc: https://pytorch.org/docs/stable/generated/torch.Tensor.backward.html
+                # do the error backpropagation to calculate the gradients
+                train_loss.backward()
+                # check here for the opti.step doc: https://pytorch.org/docs/stable/optim.html
+                # update the variables according to the optimizer and the gradients calculated by the above loss.backward function
+                optimizer.step()
+
+                if epoch%100 == 0 and idx == 0:
+                    accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                    print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
     
     def test(self, X):
         # do the testing, and result the result
