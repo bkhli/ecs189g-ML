@@ -45,14 +45,14 @@ class Method_MLP(method, nn.Module):
         # doc: https://pytorch.org/docs/stable/generated/torch.nn.MaxPool2d.html#torch.nn.MaxPool2d
         self.pool1 = nn.MaxPool2d(kernel_size=2).to(device)  # output size: 14 x 14
 
-        self.batch1 = nn.BatchNorm2d(n1)
-        self.dropout1 = nn.Dropout2d(0.25)
+        self.batch1 = nn.BatchNorm2d(n1).to(device)
+        self.dropout1 = nn.Dropout2d(0.25).to(device)
 
         self.conv2 = nn.Conv2d(in_channels=n1, out_channels=n2, kernel_size=5).to(device) # output size: 10 x 10
         self.pool2 = nn.MaxPool2d(kernel_size=2).to(device) # output size: 5 x 5
 
-        self.batch2 = nn.BatchNorm2d(n2)
-        self.dropout2 = nn.Dropout2d(0.2)
+        self.batch2 = nn.BatchNorm2d(n2).to(device)
+        self.dropout2 = nn.Dropout2d(0.2).to(device)
 
         # completely flat to 1D
         self.flatten = nn.Flatten().to(device)
@@ -70,23 +70,23 @@ class Method_MLP(method, nn.Module):
         m2 = 64
         m3 = 64
 
-        self.cv1 = nn.Conv2d(3, m1, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm2d(m1)
-        self.pool1 = nn.MaxPool2d(2)   # Output: [32, 16, 16]
+        self.cv1 = nn.Conv2d(3, m1, kernel_size=3, padding=1).to(device)
+        self.bn1 = nn.BatchNorm2d(m1).to(device)
+        self.pool1 = nn.MaxPool2d(2).to(device)   # Output: [32, 16, 16]
 
-        self.cv2 = nn.Conv2d(m1, m2, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(m2)
-        self.pool2 = nn.MaxPool2d(2)   # Output: [64, 8, 8]
+        self.cv2 = nn.Conv2d(m1, m2, kernel_size=3, padding=1).to(device)
+        self.bn2 = nn.BatchNorm2d(m2).to(device)
+        self.pool2 = nn.MaxPool2d(2).to(device)   # Output: [64, 8, 8]
 
-        self.cv3 = nn.Conv2d(m2, m3, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm2d(m3)
-        self.pool3 = nn.MaxPool2d(2)   # Output: [128, 4, 4]
+        self.cv3 = nn.Conv2d(m2, m3, kernel_size=3, padding=1).to(device)
+        self.bn3 = nn.BatchNorm2d(m3).to(device)
+        self.pool3 = nn.MaxPool2d(2).to(device)   # Output: [128, 4, 4]
 
         # self.fc1 = nn.Linear(m2 * 8 * 8, 256)
-        self.fc1 = nn.Linear(m3 * 4 * 4, 256)
-        self.flatten = nn.Flatten()
-        self.dropout = nn.Dropout(0.3)
-        self.fc2 = nn.Linear(256, 10)
+        self.fc1 = nn.Linear(m3 * 4 * 4, 256).to(device)
+        self.flatten = nn.Flatten().to(device)
+        self.dropout = nn.Dropout(0.3).to(device)
+        self.fc2 = nn.Linear(256, 10).to(device)
 
 
         
