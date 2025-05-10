@@ -7,6 +7,7 @@ Concrete MethodModule class for a specific learning MethodModule
 
 from local_code.base_class.method import method
 from local_code.stage_3_code.Evaluate_Accuracy import Evaluate_Accuracy
+from sklearn.metrics import accuracy_score
 from local_code.stage_3_code.CIFAR_Batcher import CIFAR_Dataset
 import torch
 from torch import nn
@@ -20,11 +21,11 @@ print("torch running with", device)
 class Method_MLP(method, nn.Module):
     data = None
     # it defines the max rounds to train the model
-    max_epoch = 200
+    max_epoch = 400
     # it defines the learning rate for gradient descent based optimizer for model learning
     learning_rate = 1e-3
 
-    batch_size = 64 # Number of training instances to be computed at once
+    batch_size = 128 # Number of training instances to be computed at once
 
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
@@ -94,7 +95,7 @@ class Method_MLP(method, nn.Module):
         # convert y to torch.tensor as well
 
         # check here for the torch.optim doc: https://pytorch.org/docs/stable/optim.html
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=1e-4)
         # check here for the nn.CrossEntropyLoss doc: https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
         loss_function = nn.CrossEntropyLoss()
         # for training accuracy investigation purpose
@@ -110,7 +111,7 @@ class Method_MLP(method, nn.Module):
         train_dataset = TensorDataset(X_tensor, y_tensor)
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0)
         for epoch in range(self.max_epoch): # you can do an early stop if self.max_epoch is too much...
-            print(epoch)
+            # print(epoch)
 
             for idx, (X, y_true) in enumerate(train_loader):
                 # ic(X.shape)
@@ -130,10 +131,14 @@ class Method_MLP(method, nn.Module):
                 # update the variables according to the optimizer and the gradients calculated by the above loss.backward function
                 optimizer.step()
 
-                if epoch%100 == 0 and idx == 0:
+                if epoch%10 == 0 and idx == 0:
                     accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
                     print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
-    
+                if epoch%50 == 0 and idx ==0:
+                    test_preds = self.test(self.data['test']['X']) 
+                    test_acc = accuracy_score(self.data['test']['y'], test_preds)
+                    print('Test Accuracy:', test_acc)
+
     def test(self, X):
         X_tensor = torch.tensor(np.array( X ), dtype=torch.float32).to(device=device) / 255
         test_dataset = TensorDataset(X_tensor)

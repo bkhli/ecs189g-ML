@@ -17,8 +17,8 @@ class Method_MLP(method, nn.Module):
     # it defines the max rounds to train the model
     max_epoch = 500
     # it defines the learning rate for gradient descent based optimizer for model learning
-    learning_rate = 1e-3
 
+    learning_rate = 1e-3
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
     # the size of the input/output portal of the model architecture should be consistent with our data input and desired output
