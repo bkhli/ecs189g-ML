@@ -18,10 +18,9 @@ print("torch running with", device)
 class Method_MLP(method, nn.Module):
     data = None
     # it defines the max rounds to train the model
-    max_epoch = 500
+    max_epoch = 200
     # it defines the learning rate for gradient descent based optimizer for model learning
-    # lowered learning rate because of less data
-    learning_rate = 1e-5
+    learning_rate = 1e-3
 
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
@@ -30,35 +29,28 @@ class Method_MLP(method, nn.Module):
         method.__init__(self, mName, mDescription)
         nn.Module.__init__(self)
         
-        # changed number of channels so that there are more features
-        n1 = 8
-        n2 = 16
+        n1 = 5
+        n2 = 10
 
         # input Image size 112x92 (the images are gray-scale with only one channel)
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=n1, kernel_size=3, padding=1).to(device)  # doc: https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html#torch.nn.Conv2d
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=n1, kernel_size=5).to(device)  # doc: https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html#torch.nn.Conv2d
         # 2 * 0 - 5 + 1 = -4 for each convolution map
-        # output size: 112 x 92
+        # output size: 108 x 88
         self.pool1 = nn.MaxPool2d(kernel_size=2).to(device)  # doc: https://pytorch.org/docs/stable/generated/torch.nn.MaxPool2d.html#torch.nn.MaxPool2d
-        # output size: 56 x 46
-        self.conv2 = nn.Conv2d(in_channels=n1, out_channels=n2, kernel_size=3, padding=1).to(device)
-        # output size: 56 x 46
+        # output size: 54 x 44
+        self.conv2 = nn.Conv2d(in_channels=n1, out_channels=n2, kernel_size=5).to(device)
+        # output size: 50 x 40
         self.pool2 = nn.MaxPool2d(kernel_size=2).to(device)
-        # output size: 28 x 23
+        # output size: 25 x 20
 
         # completely flat to 1D
         self.flatten = nn.Flatten().to(device)
         
-        n3 = 28 * 23 * n2
-
-        # to prevent overfitting, doesn't seem to do that much though
-        self.dropout = nn.Dropout(p=0.5)  # Drop 50% of neurons during training
-
-
-        # changed from 64 to 512, seems to work better
-        self.fc_layer_1 = nn.Linear(n3, 512).to(device)
+        n3 = 25 * 20 * n2
+        self.fc_layer_1 = nn.Linear(n3, 64).to(device)
         self.activation_func_1 = nn.ReLU().to(device)
 
-        self.fc_layer_2 = nn.Linear(512, 41).to(device)
+        self.fc_layer_2 = nn.Linear(64, 41).to(device)
         # final category: 1-40.
 
 
@@ -99,12 +91,10 @@ class Method_MLP(method, nn.Module):
 
         # check here for the torch.optim doc: https://pytorch.org/docs/stable/optim.html
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        #optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, momentum=0.9)
         # check here for the nn.CrossEntropyLoss doc: https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
         loss_function = nn.CrossEntropyLoss()
         # for training accuracy investigation purpose
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
-
 
         # it will be an iterative gradient updating process
         # we don't do mini-batch, we use the whole input as one batch
@@ -113,37 +103,7 @@ class Method_MLP(method, nn.Module):
             # get the output, we need to covert X into torch.tensor so pytorch algorithm can operate on it
             y_pred = self.forward(X)
             # calculate the training loss
-            #train_loss = loss_function(y_pred, y_true)
-
-
-
-            # trying to add loss function (come back and check docs later)
-            # l1_lambda = 0.001
-            # l1_penalty = 0
-            # for name, param in self.named_parameters():
-            #     if 'weight' in name:  # Only apply L1 to weight parameters
-            #         l1_penalty += torch.sum(torch.abs(param))
-            # # for param in self.parameters():
-            # #     l1_penalty += param.abs().sum()
-
-            # train_loss = loss_function(y_pred, y_true) + l1_lambda * l1_penalty
-
-
-
-            # # L2 regularization
-            l2_lambda = 0.001  # Set the L2 regularization strength
-
-            l2_penalty = 0
-            for name, param in self.named_parameters():
-                if 'weight' in name:  # Only apply L2 to weight parameters
-                    l2_penalty += torch.sum(param.pow(2))  # or param ** 2
-
-            # for param in self.parameters():
-            #     l2_penalty += param.abs().sum()
-
-            train_loss = loss_function(y_pred, y_true) + l2_lambda * l2_penalty
-
-            
+            train_loss = loss_function(y_pred, y_true)
 
             # check here for the gradient init doc: https://pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html
             optimizer.zero_grad()

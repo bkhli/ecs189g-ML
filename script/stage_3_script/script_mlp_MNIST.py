@@ -5,16 +5,12 @@ from local_code.stage_3_code.Setting import Setting_Train_Test
 from local_code.stage_3_code.Evaluate_Accuracy import Evaluate_Accuracy
 import numpy as np
 import torch
-import time
 
 #---- Multi-Layer Perceptron script ----
 if 1:
     #---- parameter section -------------------------------
-    seed_gen = int(time.time())  # Seed from current timestamp
-    print("seed: ")
-    print(seed_gen % 100)
-    np.random.seed(seed_gen % 100)
-    torch.manual_seed(seed_gen % 100)
+    np.random.seed(2)
+    torch.manual_seed(2)
     #------------------------------------------------------
 
     # ---- objection initialization setction ---------------

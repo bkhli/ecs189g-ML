@@ -5,27 +5,12 @@ from local_code.stage_3_code.Setting_ORL import Setting_Train_Test
 from local_code.stage_3_code.Evaluate_Accuracy import Evaluate_Accuracy
 import numpy as np
 import torch
-import time
 
 #---- Multi-Layer Perceptron script ----
 if 1:
     #---- parameter section -------------------------------
-    # try to have no seeding for reproducibility
-    
-
-# Use the current time to generate a unique seed each time
-
-    # Seed from current timestamp to test different random vals    
-    seed_num = int(time.time()) % 100
-
-    # but for now, just keep seed to 2
-    seed_num = 2
-
-    print("seed: ")
-    print(seed_num)
-
-    np.random.seed(seed_num)
-    torch.manual_seed(seed_num)
+    np.random.seed(2)
+    torch.manual_seed(2)
     #------------------------------------------------------
 
     # ---- objection initialization setction ---------------
