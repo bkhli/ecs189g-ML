@@ -29,8 +29,8 @@ class Method_MLP(method, nn.Module):
         method.__init__(self, mName, mDescription)
         nn.Module.__init__(self)
         
-        n1 = 5
-        n2 = 10
+        n1 = 8
+        n2 = 16
 
         # input Image size: 28x28 (the images are gray-scale with only one channel)
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=n1, kernel_size=5).to(device)  # doc: https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html#torch.nn.Conv2d

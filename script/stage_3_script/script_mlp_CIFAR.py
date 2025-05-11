@@ -1,11 +1,10 @@
 from local_code.stage_3_code.Dataset_Loader import Dataset_Loader
-from local_code.stage_3_code.Method_MLP_CIFAR import Method_MLP
+from local_code.stage_3_code.Method_MLP_CIFAR_larger import Method_MLP
 from local_code.stage_3_code.Result_Saver import Result_Saver
 from local_code.stage_3_code.Setting_CIFAR import Setting_Train_Test
 from local_code.stage_3_code.Evaluate_Accuracy import Evaluate_Accuracy
 import numpy as np
 import torch
-
 #---- Multi-Layer Perceptron script ----
 if 1:
     #---- parameter section -------------------------------
