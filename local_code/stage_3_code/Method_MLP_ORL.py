@@ -7,6 +7,7 @@ Concrete MethodModule class for a specific learning MethodModule
 
 from local_code.base_class.method import method
 from local_code.stage_3_code.Evaluate_Accuracy import Evaluate_Accuracy
+from local_code.stage_3_code.Graph_Loss import TrainLoss
 import torch
 from torch import nn
 import numpy as np
@@ -109,6 +110,7 @@ class Method_MLP(method, nn.Module):
         # it will be an iterative gradient updating process
         # we don't do mini-batch, we use the whole input as one batch
         # you can try to split X and y into smaller-sized batches by yourself
+        loss_tracker = TrainLoss()
         for epoch in range(self.max_epoch): # you can do an early stop if self.max_epoch is too much...
             # get the output, we need to covert X into torch.tensor so pytorch algorithm can operate on it
             y_pred = self.forward(X)
@@ -154,9 +156,14 @@ class Method_MLP(method, nn.Module):
             # update the variables according to the optimizer and the gradients calculated by the above loss.backward function
             optimizer.step()
 
+            if epoch%5 ==0:
+                loss_tracker.add_epoch(epoch, train_loss.item())
+
             if epoch%100 == 0:
                 accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
                 print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
+
+        loss_tracker.show_graph_loss()
     
     def test(self, X):
         # do the testing, and result the result

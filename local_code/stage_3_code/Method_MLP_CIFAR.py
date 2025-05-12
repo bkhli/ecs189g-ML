@@ -7,6 +7,7 @@ Concrete MethodModule class for a specific learning MethodModule
 
 from local_code.base_class.method import method
 from local_code.stage_3_code.Evaluate_Accuracy import Evaluate_Accuracy
+from local_code.stage_3_code.Graph_Loss import TrainLoss
 from sklearn.metrics import accuracy_score
 from local_code.stage_3_code.CIFAR_Batcher import CIFAR_Dataset
 import torch
@@ -151,6 +152,7 @@ class Method_MLP(method, nn.Module):
         y_tensor = torch.tensor(np.array( y ), dtype=torch.long).to(device=device)
         train_dataset = TensorDataset(X_tensor, y_tensor)
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0)
+        loss_tracker = TrainLoss()
         for epoch in range(self.max_epoch): # you can do an early stop if self.max_epoch is too much...
             print(epoch)
 
@@ -175,10 +177,13 @@ class Method_MLP(method, nn.Module):
                 if epoch%10 == 0 and idx == 0:
                     accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
                     print('\nEpoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
+                if epoch%5 ==0:
+                    loss_tracker.add_epoch(epoch, train_loss.item())
                 if epoch%50 == 0 and idx ==0:
                     test_preds = self.test(self.data['test']['X']) 
                     test_acc = accuracy_score(self.data['test']['y'], test_preds)
                     print('Test Accuracy:', test_acc)
+        loss_tracker.show_graph_loss()
 
     def test(self, X):
         X_tensor = torch.tensor(np.array( X ), dtype=torch.float32).to(device=device) / 255
@@ -209,4 +214,3 @@ class Method_MLP(method, nn.Module):
         print('--start testing...')
         pred_y = self.test(self.data['test']['X'])
         return {'pred_y': pred_y, 'true_y': self.data['test']['y']}
-
