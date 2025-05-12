@@ -22,7 +22,7 @@ print("torch running with", device)
 class Method_MLP(method, nn.Module):
     data = None
     # it defines the max rounds to train the model
-    max_epoch = 400
+    max_epoch = 30
     # it defines the learning rate for gradient descent based optimizer for model learning
     learning_rate = 1e-3
 
@@ -174,11 +174,11 @@ class Method_MLP(method, nn.Module):
                 # update the variables according to the optimizer and the gradients calculated by the above loss.backward function
                 optimizer.step()
 
+                if idx == 0:
+                    loss_tracker.add_epoch(epoch, train_loss.item())
                 if epoch%10 == 0 and idx == 0:
                     accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
                     print('\nEpoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
-                if epoch%5 ==0:
-                    loss_tracker.add_epoch(epoch, train_loss.item())
                 if epoch%50 == 0 and idx ==0:
                     test_preds = self.test(self.data['test']['X']) 
                     test_acc = accuracy_score(self.data['test']['y'], test_preds)
