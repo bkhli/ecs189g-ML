@@ -66,8 +66,8 @@ class Setting_Train_Test(setting):
             
         self.evaluate.data = learned_result
         self.evaluate_f1_none.data = learned_result
-        self.evaluate_f1_macro.data = learned_result
         self.evaluate_f1_micro.data = learned_result
+        self.evaluate_f1_macro.data = learned_result
         self.evaluate_f1_weighted.data = learned_result
         
         return self.evaluate.evaluate(), self.evaluate_f1_none.evaluate(), self.evaluate_f1_macro.evaluate(), self.evaluate_f1_micro.evaluate(), self.evaluate_f1_weighted.evaluate()
