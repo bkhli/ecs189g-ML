@@ -54,6 +54,8 @@ class Dataset_Loader(dataset):
         vocab.set_default_index(vocab["<unk>"])
         data["train"]["X"] = [self.to_index(x, vocab) for x in data["train"]["X"]]
         data["test"]["X"] = [self.to_index(x, vocab) for x in data["test"]["X"]]           
+        # print("[DEBUG] Final vocab object before return:", vocab)
+        # print("[DEBUG] Type of vocab:", type(vocab))
         return data, vocab
 
     def preprocess(self, text):
