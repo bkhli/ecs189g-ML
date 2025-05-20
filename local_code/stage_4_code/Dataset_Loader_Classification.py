@@ -13,6 +13,7 @@ from torchtext.vocab import build_vocab_from_iterator
 
 import os, re
 import pickle
+# import contractions
 
 class Dataset_Loader(dataset):
     data = None
@@ -43,8 +44,11 @@ class Dataset_Loader(dataset):
                 for reviewfile in os.listdir(folderpath):
                     with open(f"{folderpath}/{reviewfile}") as f:
                         raw = f.read()
+                        # print(f"\n\n{rating} - {raw}")
                         processed_text = self.preprocess(raw)
+                        # print(f"\n\n{rating} - {processed_text}")
                         tokens = tokenizer(processed_text)
+                        # print(f"\n\n{rating} - {tokens}")
                         all_tokens.append(tokens)
 
                         data[split]["X"].append(tokens)
@@ -60,9 +64,11 @@ class Dataset_Loader(dataset):
 
     def preprocess(self, text):
         text = text.lower()
-        text = re.sub(r"[^\w\s]", '', text)
-        text = re.sub(r"\s+", ' ', text)
-        text = re.sub(r"\d", '', text)
+        # text = contractions.fix(text)
+        text = re.sub(r"</?[^>]+>", " ", text) # deletes html tags
+        text = re.sub(r"[^\w\s]", '', text) # Removes all punctuation and special characters
+        text = re.sub(r"\s+", ' ', text) # Collapses multiple whitespace
+        # text = re.sub(r"\d", '', text) # Deletes digits. Include or delete?
         return text
 
     def to_index(self, tokens, vocab):

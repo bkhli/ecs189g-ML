@@ -2,7 +2,7 @@ from local_code.stage_4_code.Dataset_Loader_Classification import Dataset_Loader
 from local_code.stage_4_code.Result_Saver import Result_Saver
 from local_code.stage_4_code.Setting_Classification import Setting_Train_Test
 from local_code.stage_4_code.Evaluate_Accuracy import Evaluate_Accuracy
-from local_code.stage_4_code.Evaluate_F1 import Evaluate_F1_None, Evaluate_F1_Macro, Evaluate_F1_Micro, Evaluate_F1_Weighted
+# from local_code.stage_4_code.Evaluate_F1 import Evaluate_F1_None, Evaluate_F1_Macro, Evaluate_F1_Micro, Evaluate_F1_Weighted
 import numpy as np
 import torch
 

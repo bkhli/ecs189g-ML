@@ -30,7 +30,7 @@ class Method_MLP(method, nn.Module):
 
         self.data = None
         # it defines the max rounds to train the model
-        self.max_epoch = 500
+        self.max_epoch = 50
         # it defines the learning rate for gradient descent based optimizer for model learning
         self.learning_rate = 1e-3
         self.batch_size = 64
@@ -46,7 +46,7 @@ class Method_MLP(method, nn.Module):
 
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_dim)
         self.rnn = nn.RNN(self.embedding_dim, self.hidden_size, batch_first=True)
-        self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.3)
         self.fc = nn.Linear(self.hidden_size, 1)
 
 
@@ -59,7 +59,7 @@ class Method_MLP(method, nn.Module):
         # Hidden_out: [layers, batches, hidden]
 
         out = hidden_out[-1]
-        # out = self.dropout(out)
+        out = self.dropout(out)
         logits = self.fc(out)
         return logits.squeeze(1) # Because they're nested
 
@@ -86,7 +86,7 @@ class Method_MLP(method, nn.Module):
                 self.embedding.weight.data[idx] = unk_vector
                 unk_count += 1
                 # print(word) # Not as interesting as you'd think...
-        print(f"{unk_count} unknown words")
+        print(f"{unk_count} unknown words out of a {self.vocab_size} vocab")
 
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
 
@@ -131,7 +131,7 @@ class Method_MLP(method, nn.Module):
 
                 if idx == 0:
                     loss_tracker.add_epoch(epoch, train_loss.item())
-                if epoch%10 == 0 and idx == 0:
+                if epoch%1 == 0 and idx == 0:
                     batch_preds = torch.round(torch.sigmoid(y_pred))
 
                     accuracy_evaluator.data = {
@@ -139,8 +139,8 @@ class Method_MLP(method, nn.Module):
                         'pred_y': batch_preds.detach().cpu().numpy()
                     }
                     # accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': batch_preds.cpu()}
-                    print('\nEpoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
-                if epoch%50 == 0 and idx ==0:
+                    print('\nEpoch:', epoch, 'Accuracy in batch of size', self.batch_size, ':', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
+                if epoch%2 == 0 and idx ==0:
                     test_preds = self.test(self.data['test']['X']) 
                     accuracy_evaluator.data = {
                         'true_y': self.data['test']['y'],
