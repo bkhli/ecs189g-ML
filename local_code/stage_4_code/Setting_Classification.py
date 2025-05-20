@@ -1,11 +1,15 @@
-'''
+"""
 Concrete SettingModule class for a specific experimental SettingModule
-'''
+"""
 
-from local_code.stage_4_code.Method_Classification import Method_MLP
-from local_code.base_class.setting import setting
-from sklearn.model_selection import train_test_split
 import numpy as np
+from sklearn.model_selection import train_test_split
+
+from local_code.base_class.setting import setting
+from local_code.stage_4_code.Method_Classification import Method_RNN
+from local_code.stage_4_code.Method_Classification_GRU import Method_GRU
+from local_code.stage_4_code.Method_Classification_LSTM import Method_LSTM
+
 
 class Setting_Train_Test(setting):
     fold = 3
@@ -19,37 +23,61 @@ class Setting_Train_Test(setting):
         # self.evaluate_f1_macro = sEvaluateF1Macro
         # self.evaluate_f1_micro = sEvaluateF1Micro
         # self.evaluate_f1_weighted = sEvaluateF1Weighted
-    
+
     def load_run_save_evaluate(self):
-        
+
         # load dataset
         loaded_data, vocab = self.dataset.load()
         # print("[DEBUG] vocab from dataset.load():", vocab)
         # print("[DEBUG] vocab keys sample:", list(vocab.get_stoi().items())[:5] if vocab else "N/A")
-        method = Method_MLP('RNN', 'RNN sentiment classification', vocab)
-        
+
+        # Uncomment below to change with method is used
+
+        method = "GRU"
+        match method:
+            case "RNN":
+                method = Method_RNN("RNN", "RNN sentiment classification", vocab)
+            case "GRU":
+                method = Method_GRU("GRU", "GRU sentiment classification", vocab)
+            case "LSTM":
+                method = Method_MLP("LSTM", "LSTM sentiment classification", vocab)
+            case _:
+                raise Exception("Invalid model passed in Setting_Classifciation.py")
+
         X_train = loaded_data["train"]["X"]
         y_train = loaded_data["train"]["y"]
         X_test = loaded_data["test"]["X"]
         y_test = loaded_data["test"]["y"]
 
         # run MethodModule
-        method.data = {'train': {'X': X_train, 'y': y_train}, 'test': {'X': X_test, 'y': y_test}}
+        method.data = {
+            "train": {"X": X_train, "y": y_train},
+            "test": {"X": X_test, "y": y_test},
+        }
         learned_result = method.run()
 
         # save raw ResultModule
         self.result.data = learned_result
         self.result.save()
-            
+
         self.evaluate.data = learned_result
         # self.evaluate_f1_none.data = learned_result
         # self.evaluate_f1_macro.data = learned_result
         # self.evaluate_f1_micro.data = learned_result
         # self.evaluate_f1_weighted.data = learned_result
-        
+
         return self.evaluate.evaluate()
         # , self.evaluate_f1_none.evaluate(), self.evaluate_f1_macro.evaluate(), self.evaluate_f1_micro.evaluate(), self.evaluate_f1_weighted.evaluate()
 
     def print_setup_summary(self):
-        print('dataset:', self.dataset.dataset_name, ', method: RNN',
-              ', setting:', self.setting_name, ', result:', self.result.result_name, ', evaluation:', self.evaluate.evaluate_name)
+        print(
+            "dataset:",
+            self.dataset.dataset_name,
+            ", method: RNN",
+            ", setting:",
+            self.setting_name,
+            ", result:",
+            self.result.result_name,
+            ", evaluation:",
+            self.evaluate.evaluate_name,
+        )

@@ -1,25 +1,30 @@
-'''
+"""
 Concrete MethodModule class for a specific learning MethodModule
-'''
+"""
 
 # Copyright (c) 2017-Current Jiawei Zhang <jiawei@ifmlab.org>
 # License: TBD
 
-from local_code.base_class.method import method
-from local_code.stage_4_code.Evaluate_Accuracy import Evaluate_Accuracy
-from local_code.stage_4_code.Graph_Loss import TrainLoss
+import numpy as np
 import torch
+from icecream import ic
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 from torchtext.vocab import GloVe
-import numpy as np
-from icecream import ic
 
-device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+from local_code.base_class.method import method
+from local_code.stage_4_code.Evaluate_Accuracy import Evaluate_Accuracy
+from local_code.stage_4_code.Graph_Loss import TrainLoss
+
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps" if torch.backends.mps.is_available() else "cpu"
+)
 print("torch running with", device)
 
-class Method_MLP(method, nn.Module):
 
+class Method_RNN(method, nn.Module):
 
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
@@ -32,8 +37,8 @@ class Method_MLP(method, nn.Module):
         # it defines the max rounds to train the model
         self.max_epoch = 50
         # it defines the learning rate for gradient descent based optimizer for model learning
-        self.learning_rate = 1e-3
-        self.batch_size = 128
+        self.learning_rate = 5e-5
+        self.batch_size = 256
 
         assert vocab is not None, "[BUG] vocab is None when passed to Method_MLP"
         # print("[DEBUG] vocab type:", type(vocab))
@@ -42,27 +47,29 @@ class Method_MLP(method, nn.Module):
         self.vocab = vocab
         self.vocab_size = len(vocab)
         self.embedding_dim = 100
-        self.hidden_size = 20
+        self.hidden_size = 128  # 20
+        self.num_layers = 2
+        self.bidirectional = False
 
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_dim)
-        self.rnn = nn.RNN(self.embedding_dim, self.hidden_size, batch_first=True)
+        self.rnn = nn.RNN(
+            self.embedding_dim, self.hidden_size, self.num_layers, batch_first=True
+        )
         self.dropout = nn.Dropout(0.3)
-        self.fc = nn.Linear(self.hidden_size, 1)
-
+        self.fc = nn.Linear(self.hidden_size * (2 if self.bidirectional else 1), 1)
 
     # it defines the forward propagation function for input x
     # this function will calculate the output layer by layer
     def forward(self, x) -> torch.Tensor:
         embeddings = self.embedding(x)
-        outputs, hidden_out = self.rnn(embeddings) 
+        outputs, hidden_out = self.rnn(embeddings)
         # Outputs: [batches, seq_len, hidden]
         # Hidden_out: [layers, batches, hidden]
 
         out = hidden_out[-1]
         out = self.dropout(out)
         logits = self.fc(out)
-        return logits.squeeze(1) # Because they're nested
-
+        return logits.squeeze(1)  # Because they're nested
 
     # backward error propagation will be implemented by pytorch automatically
     # so we don't need to define the error backpropagation function here
@@ -92,21 +99,25 @@ class Method_MLP(method, nn.Module):
 
         # optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate, weight_decay=1e-4)
         # check here for the nn.CrossEntropyLoss doc: https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
-        loss_function = nn.BCEWithLogitsLoss() # Binary Cross Entropy Loss
+        loss_function = nn.BCEWithLogitsLoss()  # Binary Cross Entropy Loss
         # for training accuracy investigation purpose
-        accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
+        accuracy_evaluator = Evaluate_Accuracy("training evaluator", "")
 
         # it will be an iterative gradient updating process
         # we don't do mini-batch, we use the whole input as one batch
         # you can try to split X and y into smaller-sized batches by yourself
 
         # train_dataset = CIFAR_Dataset(X, y)
-        X_tensor = torch.tensor(np.array( X ), dtype=torch.long).to(device=device)
-        y_tensor = torch.tensor(np.array( y ), dtype=torch.float32).to(device=device)
+        X_tensor = torch.tensor(np.array(X), dtype=torch.long).to(device=device)
+        y_tensor = torch.tensor(np.array(y), dtype=torch.float32).to(device=device)
         train_dataset = TensorDataset(X_tensor, y_tensor)
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0)
+        train_loader = DataLoader(
+            train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4
+        )  # Could replace with num_workers=0,1,2,..
         loss_tracker = TrainLoss()
-        for epoch in range(self.max_epoch): # you can do an early stop if self.max_epoch is too much...
+        for epoch in range(
+            self.max_epoch
+        ):  # you can do an early stop if self.max_epoch is too much...
             print(epoch)
 
             for idx, (X, y_true) in enumerate(train_loader):
@@ -131,31 +142,40 @@ class Method_MLP(method, nn.Module):
 
                 if idx == 0:
                     loss_tracker.add_epoch(epoch, train_loss.item())
-                if epoch%1 == 0 and idx == 0:
+                if epoch % 1 == 0 and idx == 0:
                     batch_preds = torch.round(torch.sigmoid(y_pred))
 
                     accuracy_evaluator.data = {
-                        'true_y': y_true.detach().cpu().numpy(),
-                        'pred_y': batch_preds.detach().cpu().numpy()
+                        "true_y": y_true.detach().cpu().numpy(),
+                        "pred_y": batch_preds.detach().cpu().numpy(),
                     }
                     # accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': batch_preds.cpu()}
-                    print('\nEpoch:', epoch, 'Accuracy in batch of size', self.batch_size, ':', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
-                if epoch%2 == 0 and idx ==0:
-                    test_preds = self.test(self.data['test']['X']) 
+                    print(
+                        "\nEpoch:",
+                        epoch,
+                        "Accuracy in batch of size",
+                        self.batch_size,
+                        ":",
+                        accuracy_evaluator.evaluate(),
+                        "Loss:",
+                        train_loss.item(),
+                    )
+                if epoch % 2 == 0 and idx == 0:
+                    test_preds = self.test(self.data["test"]["X"])
                     accuracy_evaluator.data = {
-                        'true_y': self.data['test']['y'],
-                        'pred_y': test_preds.detach().cpu().numpy()
+                        "true_y": self.data["test"]["y"],
+                        "pred_y": test_preds.detach().cpu().numpy(),
                     }
                     test_acc = accuracy_evaluator.evaluate()
-                    print('Test Accuracy:', test_acc)
+                    print("Test Accuracy:", test_acc)
         loss_tracker.show_graph_loss()
 
-
-
     def test(self, X):
-        X_tensor = torch.tensor(np.array( X ), dtype=torch.long).to(device=device) 
+        X_tensor = torch.tensor(np.array(X), dtype=torch.long).to(device=device)
         test_dataset = TensorDataset(X_tensor)
-        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=0)
+        test_loader = DataLoader(
+            test_dataset, batch_size=self.batch_size, num_workers=0
+        )
 
         y_preds = []
 
@@ -167,11 +187,10 @@ class Method_MLP(method, nn.Module):
                 y_preds.append(batch_preds)
         return torch.cat(y_preds)
 
-
     def run(self):
-        print('method running...')
-        print('--start training...')
-        self.train(self.data['train']['X'], self.data['train']['y'])
-        print('--start testing...')
-        pred_y = self.test(self.data['test']['X'])
-        return {'pred_y': pred_y, 'true_y': self.data['test']['y']}
+        print("method running...")
+        print("--start training...")
+        self.train(self.data["train"]["X"], self.data["train"]["y"])
+        print("--start testing...")
+        pred_y = self.test(self.data["test"]["X"])
+        return {"pred_y": pred_y, "true_y": self.data["test"]["y"]}

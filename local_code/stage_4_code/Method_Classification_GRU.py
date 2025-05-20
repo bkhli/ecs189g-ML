@@ -24,7 +24,7 @@ device = torch.device(
 print("torch running with", device)
 
 
-class Method_LSTM(method, nn.Module):
+class Method_GRU(method, nn.Module):
 
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
@@ -38,7 +38,7 @@ class Method_LSTM(method, nn.Module):
         self.max_epoch = 50
         # it defines the learning rate for gradient descent based optimizer for model learning
         self.learning_rate = 5e-5
-        self.batch_size = 256
+        self.batch_size = 128
 
         assert vocab is not None, "[BUG] vocab is None when passed to Method_MLP"
         # print("[DEBUG] vocab type:", type(vocab))
@@ -52,7 +52,7 @@ class Method_LSTM(method, nn.Module):
         self.bidirectional = False
 
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_dim)
-        self.rnn = nn.LSTM(
+        self.rnn = nn.GRU(
             self.embedding_dim, self.hidden_size, self.num_layers, batch_first=True
         )
         self.dropout = nn.Dropout(0.3)
@@ -112,7 +112,7 @@ class Method_LSTM(method, nn.Module):
         y_tensor = torch.tensor(np.array(y), dtype=torch.float32).to(device=device)
         train_dataset = TensorDataset(X_tensor, y_tensor)
         train_loader = DataLoader(
-            train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4
+            train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
         )  # Could replace with num_workers=0,1,2,..
         loss_tracker = TrainLoss()
         for epoch in range(

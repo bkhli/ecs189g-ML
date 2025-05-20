@@ -21,3 +21,11 @@ pip install numpy==1.24.4
 
 ##### Update Mon May 19:
 Using NLTK and filtering out digits. However, this can be meaningful in reviews (if they explicity say what rating they give e.g. 8/10). Future could remedy this.
+```bash
+pip install nltk
+# python or python3
+# i don't think you need wordnet or omw-1.4, but i installed them so logging it here
+python -m nltk.downloader punkt stopwords wordnet omw-1.4
+```
+
+
