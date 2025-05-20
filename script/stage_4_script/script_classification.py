@@ -42,7 +42,7 @@ if 1:
     # setting_obj.prepare(data_obj, result_obj, evaluate_obj_acc, evaluate_obj_f1_none,
     #                     evaluate_obj_f1_macro, evaluate_obj_f1_micro, evaluate_obj_f1_weighted)
     setting_obj.print_setup_summary()
-    mean_score, f1_none, f1_macro, f1_micro, f1_weighted = setting_obj.load_run_save_evaluate()
+    mean_score = setting_obj.load_run_save_evaluate()
     print('************ Overall Performance ************')
     print(
         f"\nMLP Test Accuracy: {mean_score:.4f}\n"

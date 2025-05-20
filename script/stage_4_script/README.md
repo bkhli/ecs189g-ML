@@ -16,3 +16,8 @@ pip install numpy==1.24.4
 4) Additionally, since the datasets are binary:
 - We use BCE Loss (binary cross entropy loss, and rn im using bce with logits)
 - We don't need F1 score, because the classes are completely balanced (given). We could do a confusion matrix potentially?
+
+---
+
+##### Update Mon May 19:
+Using NLTK and filtering out digits. However, this can be meaningful in reviews (if they explicity say what rating they give e.g. 8/10). Future could remedy this.

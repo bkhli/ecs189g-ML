@@ -7,9 +7,14 @@ Concrete IO class for a specific dataset
 
 from local_code.base_class.dataset import dataset
 
-### TORCH TEXT IS LEGACY: pip install torchtext==0.10.0
-from torchtext.data.utils import get_tokenizer
+### TORCH TEXT IS LEGACY: pip install torchtext==0.16.0
+# from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
+
+# Changed to NLTK
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 
 import os, re
 import pickle
@@ -35,8 +40,8 @@ class Dataset_Loader(dataset):
             "test": {"X": [], "y": []}
         }
 
-        tokenizer = get_tokenizer('basic_english')
         all_tokens = []
+        stop_words = set(stopwords.words('english'))
 
         for split in ["train", "test"]:
             for rating in ["pos", "neg"]:
@@ -47,11 +52,14 @@ class Dataset_Loader(dataset):
                         # print(f"\n\n{rating} - {raw}")
                         processed_text = self.preprocess(raw)
                         # print(f"\n\n{rating} - {processed_text}")
-                        tokens = tokenizer(processed_text)
+                        tokens = word_tokenize(processed_text)
+                        words = [word for word in tokens if word.isalpha()]
+                        words = [w for w in words if not w in stop_words]
                         # print(f"\n\n{rating} - {tokens}")
-                        all_tokens.append(tokens)
+                        # print(f"\n\n{rating} - {words}")
+                        all_tokens.append(words)
 
-                        data[split]["X"].append(tokens)
+                        data[split]["X"].append(words)
                         data[split]["y"].append(1 if rating=="pos" else 0)
 
         vocab = build_vocab_from_iterator(all_tokens, specials=["<pad>", "<unk>"])
@@ -62,12 +70,13 @@ class Dataset_Loader(dataset):
         # print("[DEBUG] Type of vocab:", type(vocab))
         return data, vocab
 
+    # Now, this is only used to lowercase and strip html
     def preprocess(self, text):
         text = text.lower()
         # text = contractions.fix(text)
         text = re.sub(r"</?[^>]+>", " ", text) # deletes html tags
-        text = re.sub(r"[^\w\s]", '', text) # Removes all punctuation and special characters
-        text = re.sub(r"\s+", ' ', text) # Collapses multiple whitespace
+        # text = re.sub(r"[^\w\s]", '', text) # Removes all punctuation and special characters
+        # text = re.sub(r"\s+", ' ', text) # Collapses multiple whitespace
         # text = re.sub(r"\d", '', text) # Deletes digits. Include or delete?
         return text
 
