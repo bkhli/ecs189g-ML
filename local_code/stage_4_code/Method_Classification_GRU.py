@@ -58,9 +58,12 @@ class Method_GRU(method, nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.fc = nn.Linear(self.hidden_size * (2 if self.bidirectional else 1), 1)
 
+        self.to(device)
+
     # it defines the forward propagation function for input x
     # this function will calculate the output layer by layer
     def forward(self, x) -> torch.Tensor:
+        x = x.to(device)
         embeddings = self.embedding(x)
         outputs, hidden_out = self.rnn(embeddings)
         # Outputs: [batches, seq_len, hidden]
@@ -125,6 +128,9 @@ class Method_GRU(method, nn.Module):
                 # ic(y_true.shape)
 
                 # get the output, we need to covert X into torch.tensor so pytorch algorithm can operate on it
+
+                X = X.to(device)
+                y_true = y_true.to(device)
                 y_pred = self.forward(X)
                 # ic(y_pred.shape)
 
@@ -179,13 +185,13 @@ class Method_GRU(method, nn.Module):
 
         y_preds = []
 
-        # self.eval()
+        self.eval()
         with torch.no_grad():
             for (X,) in test_loader:
                 outputs = self.forward(X)
                 batch_preds = torch.round(torch.sigmoid(outputs))
-                y_preds.append(batch_preds)
-        return torch.cat(y_preds)
+                y_preds.append(batch_preds.cpu())
+        return torch.cat(y_preds).cpu()
 
     def run(self):
         print("method running...")
