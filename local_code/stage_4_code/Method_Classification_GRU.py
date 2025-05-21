@@ -37,8 +37,8 @@ class Method_GRU(method, nn.Module):
         # it defines the max rounds to train the model
         self.max_epoch = 150
         # it defines the learning rate for gradient descent based optimizer for model learning
-        self.learning_rate = 5e-5
-        self.batch_size = 1024
+        self.learning_rate = 3e-5
+        self.batch_size = 2048
 
         assert vocab is not None, "[BUG] vocab is None when passed to Method_MLP"
         # print("[DEBUG] vocab type:", type(vocab))
@@ -47,7 +47,7 @@ class Method_GRU(method, nn.Module):
         self.vocab = vocab
         self.vocab_size = len(vocab)
         self.embedding_dim = 100
-        self.hidden_size = 128  # 20
+        self.hidden_size = 256  # 20
         self.num_layers = 2
         self.bidirectional = False
 
@@ -55,7 +55,7 @@ class Method_GRU(method, nn.Module):
         self.rnn = nn.GRU(
             self.embedding_dim, self.hidden_size, self.num_layers, batch_first=True
         )
-        self.dropout = nn.Dropout(0.3)
+        self.dropout = nn.Dropout(0.5)
         self.fc = nn.Linear(self.hidden_size * (2 if self.bidirectional else 1), 1)
 
         self.to(device)
@@ -119,7 +119,7 @@ class Method_GRU(method, nn.Module):
         train_loader = DataLoader(
             train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0
         )  # Could replace with num_workers=0,1,2,..
-            # For running on google colab, needs to be zero?
+        # For running on google colab, needs to be zero?
         loss_tracker = TrainLoss()
         for epoch in range(
             self.max_epoch
