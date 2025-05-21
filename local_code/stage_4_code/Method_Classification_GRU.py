@@ -35,7 +35,7 @@ class Method_GRU(method, nn.Module):
 
         self.data = None
         # it defines the max rounds to train the model
-        self.max_epoch = 50
+        self.max_epoch = 150
         # it defines the learning rate for gradient descent based optimizer for model learning
         self.learning_rate = 5e-5
         self.batch_size = 1024
