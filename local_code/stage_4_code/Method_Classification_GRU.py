@@ -117,8 +117,9 @@ class Method_GRU(method, nn.Module):
         y_tensor = torch.tensor(np.array(y), dtype=torch.float32).to(device=device)
         train_dataset = TensorDataset(X_tensor, y_tensor)
         train_loader = DataLoader(
-            train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
+            train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0
         )  # Could replace with num_workers=0,1,2,..
+            # For running on google colab, needs to be zero?
         loss_tracker = TrainLoss()
         for epoch in range(
             self.max_epoch
