@@ -40,7 +40,7 @@ class Setting_Train_Test(setting):
             case "GRU":
                 method = Method_GRU("GRU", "GRU sentiment classification", vocab)
             case "LSTM":
-                method = Method_MLP("LSTM", "LSTM sentiment classification", vocab)
+                method = Method_LSTM("LSTM", "LSTM sentiment classification", vocab)
             case _:
                 raise Exception("Invalid model passed in Setting_Classifciation.py")
 
