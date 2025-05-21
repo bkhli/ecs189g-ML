@@ -77,7 +77,9 @@ class Method_GRU(method, nn.Module):
     # backward error propagation will be implemented by pytorch automatically
     # so we don't need to define the error backpropagation function here
 
-    def train(self, X, y):
+    # I renamed this so we could have a test mode and train mode
+    # Previously conflicted with pytorch naming conventions
+    def train_renamed(self, X, y):
         # ic(len(y))
         # ic(len(X))
         # ic(X[0])
@@ -122,6 +124,7 @@ class Method_GRU(method, nn.Module):
             self.max_epoch
         ):  # you can do an early stop if self.max_epoch is too much...
             print(epoch)
+            super().train(True)
 
             for idx, (X, y_true) in enumerate(train_loader):
                 # ic(X.shape)
@@ -185,7 +188,7 @@ class Method_GRU(method, nn.Module):
 
         y_preds = []
 
-        self.eval()
+        super().eval()
         with torch.no_grad():
             for (X,) in test_loader:
                 outputs = self.forward(X)
@@ -196,7 +199,7 @@ class Method_GRU(method, nn.Module):
     def run(self):
         print("method running...")
         print("--start training...")
-        self.train(self.data["train"]["X"], self.data["train"]["y"])
+        self.train_renamed(self.data["train"]["X"], self.data["train"]["y"])
         print("--start testing...")
         pred_y = self.test(self.data["test"]["X"])
         return {"pred_y": pred_y, "true_y": self.data["test"]["y"]}

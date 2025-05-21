@@ -31,5 +31,6 @@ Using NLTK and filtering out digits. However, this can be meaningful in reviews 
 pip install nltk
 # python or python3
 # i don't think you need wordnet or omw-1.4, but i installed them so logging it here
+# You might need punkt_tab?
 python -m nltk.downloader punkt stopwords wordnet omw-1.4
 ```
