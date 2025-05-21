@@ -125,7 +125,7 @@ class Method_GRU(method, nn.Module):
             self.max_epoch
         ):  # you can do an early stop if self.max_epoch is too much...
             print(epoch)
-            super().train(True)
+            self.train(True)
 
             for idx, (X, y_true) in enumerate(train_loader):
                 # ic(X.shape)
@@ -172,6 +172,7 @@ class Method_GRU(method, nn.Module):
                     )
                 if epoch % 2 == 0 and idx == 0:
                     test_preds = self.test(self.data["test"]["X"])
+                    self.train()
                     accuracy_evaluator.data = {
                         "true_y": self.data["test"]["y"],
                         "pred_y": test_preds.detach().cpu().numpy(),
@@ -189,7 +190,7 @@ class Method_GRU(method, nn.Module):
 
         y_preds = []
 
-        super().eval()
+        self.eval()
         with torch.no_grad():
             for (X,) in test_loader:
                 outputs = self.forward(X)
