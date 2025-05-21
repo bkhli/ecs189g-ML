@@ -38,7 +38,7 @@ class Method_GRU(method, nn.Module):
         self.max_epoch = 50
         # it defines the learning rate for gradient descent based optimizer for model learning
         self.learning_rate = 5e-5
-        self.batch_size = 128
+        self.batch_size = 1024
 
         assert vocab is not None, "[BUG] vocab is None when passed to Method_MLP"
         # print("[DEBUG] vocab type:", type(vocab))
