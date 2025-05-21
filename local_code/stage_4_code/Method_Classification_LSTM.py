@@ -64,7 +64,7 @@ class Method_LSTM(method, nn.Module):
     # this function will calculate the output layer by layer
     def forward(self, x) -> torch.Tensor:
         embeddings = self.embedding(x)
-        outputs, hidden_out = self.rnn(embeddings)
+        outputs, (hidden_out, cell_out) = self.rnn(embeddings)
         # Outputs: [batches, seq_len, hidden]
         # Hidden_out: [layers, batches, hidden]
 
