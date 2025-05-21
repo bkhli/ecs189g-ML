@@ -58,6 +58,8 @@ class Method_LSTM(method, nn.Module):
         self.dropout = nn.Dropout(0.5)
         self.fc = nn.Linear(self.hidden_size * (2 if self.bidirectional else 1), 1)
 
+        self.to(device)
+
     # it defines the forward propagation function for input x
     # this function will calculate the output layer by layer
     def forward(self, x) -> torch.Tensor:
