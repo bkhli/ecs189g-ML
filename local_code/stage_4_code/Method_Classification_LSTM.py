@@ -68,7 +68,11 @@ class Method_LSTM(method, nn.Module):
         # Outputs: [batches, seq_len, hidden]
         # Hidden_out: [layers, batches, hidden]
 
-        out = hidden_out[-1]
+        if self.bidirectional:
+            out = torch.cat([hidden_out[-2], hidden_out[-1]], dim=1)
+        else:
+            out = hidden_out[-1]
+
         out = self.dropout(out)
         logits = self.fc(out)
         return logits.squeeze(1)  # Because they're nested
