@@ -8,8 +8,8 @@ from sklearn.model_selection import train_test_split
 from local_code.base_class.setting import setting
 from local_code.stage_4_code.Method_Generation import Method_RNN
 
-# from local_code.stage_4_code.Generation_GRU import Method_GRU
-# from local_code.stage_4_code.Generation_LSTM import Method_LSTM
+# from local_code.stage_4_code.Method_Generation_GRU import Method_GRU
+from local_code.stage_4_code.Method_Generation_LSTM import Method_LSTM
 
 
 class Setting_Train_Test(setting):
@@ -34,14 +34,14 @@ class Setting_Train_Test(setting):
 
         # Uncomment below to change with method is used
 
-        method = "RNN"
+        method = "LSTM"
         match method:
             case "RNN":
                 method = Method_RNN("RNN", "RNN sentiment classification", vocab)
             # case "GRU":
             #     method = Method_GRU("GRU", "GRU sentiment classification", vocab)
-            # case "LSTM":
-            #     method = Method_LSTM("LSTM", "LSTM sentiment classification", vocab)
+            case "LSTM":
+                method = Method_LSTM("LSTM", "LSTM sentiment classification", vocab)
             case _:
                 raise Exception("Invalid model passed in Setting_Classifciation.py")
 

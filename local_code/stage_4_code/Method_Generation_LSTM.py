@@ -24,7 +24,7 @@ device = torch.device(
 print("torch running with", device)
 
 
-class Method_RNN(method, nn.Module):
+class Method_LSTM(method, nn.Module):
 
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
@@ -54,7 +54,7 @@ class Method_RNN(method, nn.Module):
         self.bidirectional = False
 
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_dim)
-        self.rnn = nn.RNN(
+        self.rnn = nn.LSTM(
             self.embedding_dim, self.hidden_size, self.num_layers, batch_first=True
         )
         self.dropout = nn.Dropout(0.5)
@@ -201,6 +201,7 @@ class Method_RNN(method, nn.Module):
             token_ids = [self.vocab[token] for token in tokens]
             test_data.append(token_ids)
 
+        # special tokens:
         eos_id = self.vocab["<eos>"]
         pad_id = self.vocab["<pad>"]
         unk_id = self.vocab["<unk>"]
@@ -222,8 +223,7 @@ class Method_RNN(method, nn.Module):
                     if next_token == eos_id:
                         break
 
-                    generation.append(next_token)
-
+                    generation.append(next_token) 
                     current_setup.append(next_token)
                     if len(current_setup) > 3:
                         current_setup = current_setup[-3:]
