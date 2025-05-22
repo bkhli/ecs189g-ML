@@ -7,7 +7,6 @@ from sklearn.model_selection import train_test_split
 
 from local_code.base_class.setting import setting
 from local_code.stage_4_code.Method_Generation import Method_RNN
-
 # from local_code.stage_4_code.Method_Generation_GRU import Method_GRU
 from local_code.stage_4_code.Method_Generation_LSTM import Method_LSTM
 
@@ -28,7 +27,7 @@ class Setting_Train_Test(setting):
     def load_run_save_evaluate(self):
 
         # load dataset
-        loaded_data, vocab = self.dataset.load()
+        loaded_data, vocab, preview = self.dataset.load()
         # print("[DEBUG] vocab from dataset.load():", vocab)
         # print("[DEBUG] vocab keys sample:", list(vocab.get_stoi().items())[:5] if vocab else "N/A")
 
@@ -37,11 +36,11 @@ class Setting_Train_Test(setting):
         method = "LSTM"
         match method:
             case "RNN":
-                method = Method_RNN("RNN", "RNN sentiment classification", vocab)
+                method = Method_RNN("RNN", "RNN sentiment classification", vocab, preview)
             # case "GRU":
-            #     method = Method_GRU("GRU", "GRU sentiment classification", vocab)
+            #     method = Method_GRU("GRU", "GRU sentiment classification", vocab, preview)
             case "LSTM":
-                method = Method_LSTM("LSTM", "LSTM sentiment classification", vocab)
+                method = Method_LSTM("LSTM", "LSTM sentiment classification", vocab, preview)
             case _:
                 raise Exception("Invalid model passed in Setting_Classifciation.py")
 

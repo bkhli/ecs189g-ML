@@ -85,4 +85,4 @@ class Dataset_Loader(dataset):
         vocab.set_default_index(vocab["<unk>"])
         data["X"] = [[vocab[token] for token in seq] for seq in data["X"]]
         data["y"] = [vocab[token] for token in data["y"]]
-        return data, vocab
+        return data, vocab, self.preview

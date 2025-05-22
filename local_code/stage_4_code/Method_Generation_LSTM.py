@@ -29,7 +29,7 @@ class Method_LSTM(method, nn.Module):
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
     # the size of the input/output portal of the model architecture should be consistent with our data input and desired output
-    def __init__(self, mName, mDescription, vocab):
+    def __init__(self, mName, mDescription, vocab, preview):
         nn.Module.__init__(self)
         method.__init__(self, mName, mDescription)
 
@@ -46,6 +46,8 @@ class Method_LSTM(method, nn.Module):
 
         self.vocab = vocab
         self.vocab_size = len(vocab)
+        self.preview = preview
+
         self.embedding_dim = 100
         self.hidden_size = 256  # 20
         self.dense_hidden = 128
@@ -215,7 +217,7 @@ class Method_LSTM(method, nn.Module):
 
                 for _ in range(30):
                     context = (
-                        current_setup[-3:] if len(current_setup) >= 3 else current_setup
+                        current_setup[-self.preview:] if len(current_setup) >= self.preview else current_setup
                     )
                     input_tensor = torch.tensor([context], dtype=torch.long).to(device)
                     outputs = self.forward(input_tensor)
@@ -223,8 +225,8 @@ class Method_LSTM(method, nn.Module):
 
                     generation.append(next_token)
                     current_setup.append(next_token)
-                    if len(current_setup) > 3:
-                        current_setup = current_setup[-3:]
+                    if len(current_setup) > self.preview:
+                        current_setup = current_setup[-self.preview:]
                     if next_token == eos_id:
                         break
 
