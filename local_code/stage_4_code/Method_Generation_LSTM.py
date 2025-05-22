@@ -220,16 +220,16 @@ class Method_LSTM(method, nn.Module):
                     input_tensor = torch.tensor([context], dtype=torch.long).to(device)
                     outputs = self.forward(input_tensor)
                     next_token = int(torch.argmax(outputs[0]).item())
-                    if next_token == eos_id:
-                        break
 
-                    generation.append(next_token) 
+                    generation.append(next_token)
                     current_setup.append(next_token)
                     if len(current_setup) > 3:
                         current_setup = current_setup[-3:]
+                    if next_token == eos_id:
+                        break
 
                 generated_words = []
-                for token_id in generation:
+                for token_id in generation: # The model just genuinely likes outputting the '' char? Better tokenizing?
                     if token_id == eos_id:
                         generated_words.append("<eos>")
                     elif token_id == pad_id:
@@ -237,6 +237,9 @@ class Method_LSTM(method, nn.Module):
                     elif token_id == unk_id:
                         generated_words.append("<unk>")
                     else:
+                        # print(
+                        #     f"Token ID: {token_id}, String: '{self.vocab.get_itos()[token_id]}'"
+                        # )
                         generated_words.append(self.vocab.get_itos()[token_id])
                 # generated_words = [
                 #     self.vocab.get_itos()[token_id] for token_id in generation
@@ -248,6 +251,7 @@ class Method_LSTM(method, nn.Module):
             formatted_joke = f"{setup}... {' '.join(generated)}"
             print(formatted_joke)
             out_formatted.append(formatted_joke)
+        # print(self.vocab.get_itos())
         return y_preds
 
     def run(self):

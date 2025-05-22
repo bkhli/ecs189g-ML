@@ -12,8 +12,7 @@ import re
 # Changed to NLTK
 import nltk
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-
+from nltk.tokenize import TweetTokenizer, word_tokenize
 ### TORCH TEXT IS LEGACY: pip install torchtext==0.16.0
 # from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
@@ -48,14 +47,15 @@ class Dataset_Loader(dataset):
         stop_words = set(stopwords.words("english"))
 
         reviewfile = "data"
+        tokenizer = TweetTokenizer() # This one works better. the other one splits "Don't" into "Do" and "n't". Confusing
         with open(f"{parent_path}/{reviewfile}") as f:
             for line in f:
                 # Example line: 1621,"Why was the tomato blushing? Because it saw the salad dressing!"
-                joke_string = line.split(',"')[1][:-1]  # Crops off the last parentheses
-                joke_string = joke_string.lower()
-                words = word_tokenize(joke_string)
-                # words = [word for word in tokens if word.isalpha()]
-                # words = [w for w in words if not w in stop_words]
+                joke_string = line.split(',"')[1].strip().strip('"').lower() # Strips \n and an ending "
+
+                # words = word_tokenize(joke_string)
+                words = tokenizer.tokenize(joke_string)
+
                 # print(f"Joke: {words}")
 
                 if len(words) < self.preview + 1:
@@ -69,8 +69,10 @@ class Dataset_Loader(dataset):
                 data["X"].append(words[-self.preview :])
                 data["y"].append("<eos>")  # eos -> End of sequence
 
-        for i in range(50):
+        for i in range(500):
             print(f'Hint: {data["X"][i]} | Answer {data["y"][i]}')
+
+        print(f"Number of rows: {len(data['X'])}")
 
         vocab = build_vocab_from_iterator(
             all_tokens, specials=["<pad>", "<unk>", "<eos>"]

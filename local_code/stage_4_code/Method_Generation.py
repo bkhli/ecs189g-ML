@@ -219,14 +219,15 @@ class Method_RNN(method, nn.Module):
                     input_tensor = torch.tensor([context], dtype=torch.long).to(device)
                     outputs = self.forward(input_tensor)
                     next_token = int(torch.argmax(outputs[0]).item())
-                    if next_token == eos_id:
-                        break
 
                     generation.append(next_token)
 
                     current_setup.append(next_token)
                     if len(current_setup) > 3:
                         current_setup = current_setup[-3:]
+
+                    if next_token == eos_id:
+                        break
 
                 generated_words = []
                 for token_id in generation:
