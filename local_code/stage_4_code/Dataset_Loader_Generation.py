@@ -26,7 +26,7 @@ class Dataset_Loader(dataset):
     data = None
     dataset_source_folder_path = None
     dataset_source_file_name = None
-    preview = 3
+    preview = 5
 
     def __init__(self, dName=None, dDescription=None):
         super().__init__(dName, dDescription)
@@ -51,7 +51,12 @@ class Dataset_Loader(dataset):
         with open(f"{parent_path}/{reviewfile}") as f:
             for line in f:
                 # Example line: 1621,"Why was the tomato blushing? Because it saw the salad dressing!"
-                joke_string = line.split(',"')[1].strip().strip('"').lower() # Strips \n and an ending "
+                print(line)
+                joke_string = line.split(',"')[1].strip()[:-1].lower() # Strips \n and an ending "
+                print(joke_string)
+                while '""' in joke_string:
+                    joke_string = joke_string.replace('""', '"')
+                print(joke_string)
 
                 # words = word_tokenize(joke_string)
                 words = tokenizer.tokenize(joke_string)
