@@ -216,17 +216,18 @@ class Method_LSTM(method, nn.Module):
                 generation = []
 
                 for _ in range(30):
-                    context = (
-                        current_setup[-self.preview:] if len(current_setup) >= self.preview else current_setup
-                    )
-                    input_tensor = torch.tensor([context], dtype=torch.long).to(device)
+                    # The below is limiting the context, but i just realized... why would i limit context in practice? am i stupid?
+                    # context = (
+                    #     current_setup[-self.preview:] if len(current_setup) >= self.preview else current_setup
+                    # )
+                    input_tensor = torch.tensor([current_setup], dtype=torch.long).to(device)
                     outputs = self.forward(input_tensor)
                     next_token = int(torch.argmax(outputs[0]).item())
 
                     generation.append(next_token)
                     current_setup.append(next_token)
-                    if len(current_setup) > self.preview:
-                        current_setup = current_setup[-self.preview:]
+                    # if len(current_setup) > self.preview:
+                    #     current_setup = current_setup[-self.preview:]
                     if next_token == eos_id:
                         break
 

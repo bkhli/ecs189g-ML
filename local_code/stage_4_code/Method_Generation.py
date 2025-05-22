@@ -203,6 +203,7 @@ class Method_RNN(method, nn.Module):
             token_ids = [self.vocab[token] for token in tokens]
             test_data.append(token_ids)
 
+        # special tokens:
         eos_id = self.vocab["<eos>"]
         pad_id = self.vocab["<pad>"]
         unk_id = self.vocab["<unk>"]
@@ -215,22 +216,29 @@ class Method_RNN(method, nn.Module):
                 generation = []
 
                 for _ in range(30):
-                    context = (
-                        current_setup[-self.preview:] if len(current_setup) >= self.preview else current_setup
+                    # The below is limiting the context, but i just realized... why would i limit context in practice? am i stupid?
+                    # context = (
+                    #     current_setup[-self.preview:] if len(current_setup) >= self.preview else current_setup
+                    # )
+                    input_tensor = torch.tensor([current_setup], dtype=torch.long).to(
+                        device
                     )
-                    input_tensor = torch.tensor([context], dtype=torch.long).to(device)
                     outputs = self.forward(input_tensor)
                     next_token = int(torch.argmax(outputs[0]).item())
 
                     generation.append(next_token)
                     current_setup.append(next_token)
-                    if len(current_setup) > self.preview:
-                        current_setup = current_setup[-self.preview:]
+                    # if len(current_setup) > self.preview:
+                    #     current_setup = current_setup[-self.preview:]
                     if next_token == eos_id:
                         break
 
                 generated_words = []
-                for token_id in generation:
+                for (
+                    token_id
+                ) in (
+                    generation
+                ):  # The model just genuinely likes outputting the '' char? Better tokenizing?
                     if token_id == eos_id:
                         generated_words.append("<eos>")
                     elif token_id == pad_id:
@@ -238,6 +246,9 @@ class Method_RNN(method, nn.Module):
                     elif token_id == unk_id:
                         generated_words.append("<unk>")
                     else:
+                        # print(
+                        #     f"Token ID: {token_id}, String: '{self.vocab.get_itos()[token_id]}'"
+                        # )
                         generated_words.append(self.vocab.get_itos()[token_id])
                 # generated_words = [
                 #     self.vocab.get_itos()[token_id] for token_id in generation
@@ -249,6 +260,7 @@ class Method_RNN(method, nn.Module):
             formatted_joke = f"{setup}... {' '.join(generated)}"
             print(formatted_joke)
             out_formatted.append(formatted_joke)
+        # print(self.vocab.get_itos())
         return y_preds
 
     def run(self):
