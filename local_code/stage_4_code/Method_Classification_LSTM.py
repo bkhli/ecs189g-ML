@@ -69,9 +69,12 @@ class Method_LSTM(method, nn.Module):
         # Hidden_out: [layers, batches, hidden]
 
         if self.bidirectional:
-            out = torch.cat([hidden_out[-2], hidden_out[-1]], dim=1)
+            # out = torch.cat([hidden_out[-2], hidden_out[-1]], dim=1)
+            forward_out = outputs[:, -1, : self.hidden_size]
+            backward_out = outputs[:, 0, self.hidden_size :]
+            out = torch.cat([forward_out, backward_out], dim=1)
         else:
-            out = hidden_out[-1]
+            out = outputs[:, -1, :]
 
         out = self.dropout(out)
         logits = self.fc(out)
