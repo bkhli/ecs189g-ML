@@ -34,3 +34,17 @@ pip install nltk
 # You might need punkt_tab?
 python -m nltk.downloader punkt stopwords wordnet omw-1.4
 ```
+
+---
+
+### Generation
+
+The RNN is doing okay, but I think the next step is to redo the data loader with incrementally long sequences. Right now im hard capping it to context hints of size "preview", but doing it incrementally will probably help it generate better. It goes trains through epochs quickly, but seems to take a while to actually learn. If I don't get around to doing it tomorrow and somebody wants to start, I think the most critical things to change would be:
+
+- Setting up data incrementally (the [], the horse [], the horse walked [], and building up the whole sequence like that). It's a bit of a pain to set up the padding for the training though.
+- Testing hyperparameters like hidden size, layers, learning rate, batch size etc.
+
+##### Things to pay attention to:
+
+1. Data loader is really important again. The tokenizing is good, but setting up the data for training good definitely be changed
+2. The RNN architecture. I was spitballing when I made it, definitely change it if somehting else might work better
