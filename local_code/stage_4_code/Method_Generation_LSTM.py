@@ -276,7 +276,7 @@ class Method_LSTM(method, nn.Module):
                 current_setup = setup.copy()
                 generation = []
 
-                for _ in range(30):
+                for _ in range(50):
                     # The below is limiting the context, but i just realized... why would i limit context in practice? am i stupid?
                     # context = (
                     #     current_setup[-self.preview:] if len(current_setup) >= self.preview else current_setup
