@@ -51,7 +51,7 @@ class Method_LSTM(method, nn.Module):
         self.max_epoch = 500
         # it defines the learning rate for gradient descent based optimizer for model learning
         self.learning_rate = 1e-3
-        self.batch_size = 2048
+        self.batch_size = 64
 
         assert vocab is not None, "[BUG] vocab is None when passed to Method_MLP"
         # print("[DEBUG] vocab type:", type(vocab))
