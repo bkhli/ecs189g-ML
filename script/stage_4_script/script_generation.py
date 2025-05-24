@@ -2,7 +2,8 @@
 import numpy as np
 import torch
 
-from local_code.stage_4_code.Dataset_Loader_Generation import Dataset_Loader
+# from local_code.stage_4_code.Dataset_Loader_Generation import Dataset_Loader
+from local_code.stage_4_code.Dataset_Loader_Generation_Incremental import Dataset_Loader
 from local_code.stage_4_code.Evaluate_Accuracy import Evaluate_Accuracy
 from local_code.stage_4_code.Result_Saver import Result_Saver
 from local_code.stage_4_code.Setting_Generation import Setting_Train_Test
@@ -15,6 +16,7 @@ if 1:
     # ------------------------------------------------------
 
     # ---- objection initialization setction ---------------
+    # Choose which loader to use by commenting out above
     data_obj = Dataset_Loader("Movie Reviews and Ratings", "")
     data_obj.dataset_source_folder_path = "data/stage_4_data/text_generation"
 

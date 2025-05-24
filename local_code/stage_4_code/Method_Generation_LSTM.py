@@ -9,6 +9,7 @@ import numpy as np
 import torch
 from icecream import ic
 from torch import nn
+from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, TensorDataset
 from torchtext.vocab import GloVe
 
@@ -22,6 +23,18 @@ device = torch.device(
     else "mps" if torch.backends.mps.is_available() else "cpu"
 )
 print("torch running with", device)
+
+
+class JokeDataset(torch.utils.data.Dataset):
+    def __init__(self, X, y):
+        self.X = X
+        self.y = y
+
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.y[idx]
 
 
 class Method_LSTM(method, nn.Module):
@@ -38,7 +51,7 @@ class Method_LSTM(method, nn.Module):
         self.max_epoch = 500
         # it defines the learning rate for gradient descent based optimizer for model learning
         self.learning_rate = 1e-3
-        self.batch_size = 2048
+        self.batch_size = 64
 
         assert vocab is not None, "[BUG] vocab is None when passed to Method_MLP"
         # print("[DEBUG] vocab type:", type(vocab))
@@ -67,26 +80,58 @@ class Method_LSTM(method, nn.Module):
 
         self.to(device)
 
+    def collate_fn(self, batch):
+        x_batch, y_batch = zip(*batch)
+        lengths = [len(x) for x in x_batch]
+
+        x_batch = [torch.tensor(x, dtype=torch.long) for x in x_batch]
+        x_batch = pad_sequence(
+            x_batch, batch_first=True, padding_value=self.vocab["<pad>"]
+        )
+        y_batch = torch.tensor(y_batch, dtype=torch.long)
+        lengths = torch.tensor(lengths, dtype=torch.long)
+        return x_batch, y_batch, lengths
+
     # it defines the forward propagation function for input x
     # this function will calculate the output layer by layer
-    def forward(self, x) -> torch.Tensor:
-        x = x.to(device)
-        embeddings = self.embedding(x)
-        outputs, hidden_out = self.rnn(embeddings)
-        # Outputs: [batches, seq_len, hidden]
-        # Hidden_out: [layers, batches, hidden]
+    def forward(self, x, lengths) -> torch.Tensor:
+        if self.preview:  # If there is a fixed preview
+            x = x.to(device)
+            embeddings = self.embedding(x)
+            outputs, _ = self.rnn(embeddings)
+            # Outputs: [batches, seq_len, hidden]
+            # Hidden_out: [layers, batches, hidden]
 
-        if self.bidirectional:
-            forward_out = outputs[:, -1, : self.hidden_size]
-            backward_out = outputs[:, 0, self.hidden_size :]
-            out = torch.cat([forward_out, backward_out], dim=1)
-        else:
-            out = outputs[:, -1, :]  # Use final output instead of hidden state
+            if self.bidirectional:
+                forward_out = outputs[
+                    :, -1, : self.hidden_size
+                ]  # if using a fixed preview will be -1
+                backward_out = outputs[:, 0, self.hidden_size :]
+                out = torch.cat([forward_out, backward_out], dim=1)
+            else:
+                out = outputs[:, -1, :]  # Use final output instead of hidden state
 
-        out = self.dropout(out)
-        dense_layer = self.fc1(out)
-        logits = self.fc2(dense_layer)
-        return logits
+            out = self.dropout(out)
+            dense_layer = self.fc1(out)
+            logits = self.fc2(dense_layer)
+            return logits
+        else:  # variable length input
+            # Im not supporting bidirectional variable yet...
+            x = x.to(device)
+            lengths = lengths.to(device)
+
+            embeddings = self.embedding(x)
+            outputs, _ = self.rnn(embeddings)
+
+            # Get the output from the actual last token for each sequence
+            lengths = lengths - 1
+            lengths = lengths.view(-1, 1, 1).expand(-1, 1, outputs.size(2))
+            out = outputs.gather(dim=1, index=lengths).squeeze(1)
+
+            out = self.dropout(out)
+            out = self.fc1(out)
+            logits = self.fc2(out)
+            return logits
 
     # backward error propagation will be implemented by pytorch automatically
     # so we don't need to define the error backpropagation function here
@@ -127,13 +172,26 @@ class Method_LSTM(method, nn.Module):
         # you can try to split X and y into smaller-sized batches by yourself
 
         # train_dataset = CIFAR_Dataset(X, y)
-        X_tensor = torch.tensor(np.array(X), dtype=torch.long).to(device=device)
-        y_tensor = torch.tensor(np.array(y), dtype=torch.long).to(device=device)
-        train_dataset = TensorDataset(X_tensor, y_tensor)
-        train_loader = DataLoader(
-            train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0
-        )  # Could replace with num_workers=0,1,2,..
+        if self.preview:
+            X_tensor = torch.tensor(np.array(X), dtype=torch.long).to(device=device)
+            y_tensor = torch.tensor(np.array(y), dtype=torch.long).to(device=device)
+            train_dataset = TensorDataset(X_tensor, y_tensor)
+        else:
+            train_dataset = JokeDataset(X, y)
+        if self.preview:
+            train_loader = DataLoader(
+                train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0
+            )  # Could replace with num_workers=0,1,2,..
+        else:  # variable len
+            train_loader = DataLoader(
+                train_dataset,
+                batch_size=self.batch_size,
+                shuffle=True,
+                num_workers=0,
+                collate_fn=self.collate_fn,
+            )  # Could replace with num_workers=0,1,2,..
         # For running on google colab, needs to be zero?
+
         loss_tracker = TrainLoss()
         for epoch in range(
             self.max_epoch
@@ -141,16 +199,13 @@ class Method_LSTM(method, nn.Module):
             print(epoch)
             self.train(True)
 
-            for idx, (X, y_true) in enumerate(train_loader):
-                # ic(X.shape)
-                # ic(y_true.shape)
-
-                # get the output, we need to covert X into torch.tensor so pytorch algorithm can operate on it
-
-                X = X.to(device)
-                y_true = y_true.to(device)
-                y_pred = self.forward(X)
-                # ic(y_pred.shape)
+            for idx, batch in enumerate(train_loader):
+                if self.preview:
+                    X, y_true = batch
+                    y_pred = self.forward(X, None)
+                else:
+                    X, y_true, lengths = batch
+                    y_pred = self.forward(X, lengths)
 
                 # calculate the training loss
                 train_loss = loss_function(y_pred, y_true)
@@ -211,7 +266,7 @@ class Method_LSTM(method, nn.Module):
 
         self.eval()
         with torch.no_grad():
-            for i, setup in enumerate(test_data):
+            for _, setup in enumerate(test_data):
                 current_setup = setup.copy()
                 generation = []
 
@@ -220,8 +275,17 @@ class Method_LSTM(method, nn.Module):
                     # context = (
                     #     current_setup[-self.preview:] if len(current_setup) >= self.preview else current_setup
                     # )
-                    input_tensor = torch.tensor([current_setup], dtype=torch.long).to(device)
-                    outputs = self.forward(input_tensor)
+                    input_tensor = torch.tensor([current_setup], dtype=torch.long).to(
+                        device
+                    )
+                    if self.preview:
+                        outputs = self.forward(input_tensor, None)
+                    else:
+                        length_tensor = torch.tensor(
+                            [len(current_setup)], dtype=torch.long
+                        ).to(device)
+                        outputs = self.forward(input_tensor, length_tensor)
+
                     next_token = int(torch.argmax(outputs[0]).item())
 
                     generation.append(next_token)
@@ -232,7 +296,11 @@ class Method_LSTM(method, nn.Module):
                         break
 
                 generated_words = []
-                for token_id in generation: # The model just genuinely likes outputting the '' char? Better tokenizing?
+                for (
+                    token_id
+                ) in (
+                    generation
+                ):  # The model just genuinely likes outputting the '' char? Better tokenizing?
                     if token_id == eos_id:
                         generated_words.append("<eos>")
                     elif token_id == pad_id:
@@ -250,7 +318,7 @@ class Method_LSTM(method, nn.Module):
                 y_preds.append(generated_words)
 
         out_formatted = []
-        for i, (setup, generated) in enumerate(zip(test_set, y_preds)):
+        for setup, generated in zip(test_set, y_preds):
             formatted_joke = f"{setup}... {' '.join(generated)}"
             print(formatted_joke)
             out_formatted.append(formatted_joke)

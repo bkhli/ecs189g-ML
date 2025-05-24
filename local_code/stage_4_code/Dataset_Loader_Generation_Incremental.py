@@ -11,8 +11,10 @@ import re
 
 # Changed to NLTK
 import nltk
-from nltk.corpus import stopwords
+
+# from nltk.corpus import stopwords
 from nltk.tokenize import TweetTokenizer, word_tokenize
+
 ### TORCH TEXT IS LEGACY: pip install torchtext==0.16.0
 # from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
@@ -44,19 +46,24 @@ class Dataset_Loader(dataset):
         data = {"X": [], "y": []}
 
         all_tokens = []
-        stop_words = set(stopwords.words("english"))
+        # stop_words = set(stopwords.words("english"))
 
         reviewfile = "data"
-        tokenizer = TweetTokenizer() # This one works better. the other one splits "Don't" into "Do" and "n't". Confusing
+        tokenizer = (
+            TweetTokenizer()
+        )  # This one works better. the other one splits "Don't" into "Do" and "n't". Confusing
+
         with open(f"{parent_path}/{reviewfile}") as f:
             for line in f:
-                # Example line: 1621,"Why was the tomato blushing? Because it saw the salad dressing!"
-                print(line)
-                joke_string = line.split(',"')[1].strip()[:-1].lower() # Strips \n and an ending "
-                print(joke_string)
+                # Example line: { 1621,"Why was the tomato blushing? Because it saw the salad dressing!" }
+                # print(line)
+                joke_string = (
+                    line.split(',"')[1].strip()[:-1].lower()
+                )  # Strips \n and an ending "
+                # print(joke_string)
                 while '""' in joke_string:
                     joke_string = joke_string.replace('""', '"')
-                print(joke_string)
+                # print(joke_string)
 
                 # words = word_tokenize(joke_string)
                 words = tokenizer.tokenize(joke_string)
@@ -65,11 +72,12 @@ class Dataset_Loader(dataset):
 
                 all_tokens.append(words)
 
-                for i in range(1, len(words)):  # start from 1 instead of fixed preview
-                    data["X"].append(words[:i])      # hint of length 1 to len-1
-                    data["y"].append(words[i])       # the i-th word is the target
+                stopper = min(self.MAX_SEQ, len(words))
+                for i in range(1, stopper):  # start from 1 instead of fixed preview
+                    data["X"].append(words[:i])  # hint of length 1 to len-1
+                    data["y"].append(words[i])  # the i-th word is the target
 
-                data["X"].append(words)              # final hint
+                data["X"].append(words)  # final hint
                 data["y"].append("<eos>")
 
         for i in range(500):
