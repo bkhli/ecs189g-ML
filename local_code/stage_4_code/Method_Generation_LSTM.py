@@ -51,7 +51,7 @@ class Method_LSTM(method, nn.Module):
         self.max_epoch = 500
         # it defines the learning rate for gradient descent based optimizer for model learning
         self.learning_rate = 1e-3
-        self.batch_size = 64
+        self.batch_size = 2048
 
         assert vocab is not None, "[BUG] vocab is None when passed to Method_MLP"
         # print("[DEBUG] vocab type:", type(vocab))
@@ -152,9 +152,9 @@ class Method_LSTM(method, nn.Module):
         unk_count = 0
         for word, idx in self.vocab.get_stoi().items():
             if word in glove.stoi:
-                self.embedding.weight.data[idx] = glove.vectors[glove.stoi[word]]
+                self.embedding.weight.data[idx] = glove.vectors[glove.stoi[word]].to(device)
             else:
-                self.embedding.weight.data[idx] = unk_vector
+                self.embedding.weight.data[idx] = unk_vector.to(device)
                 unk_count += 1
                 # print(word) # Not as interesting as you'd think...
         print(f"{unk_count} unknown words out of a {self.vocab_size} vocab")
@@ -202,9 +202,14 @@ class Method_LSTM(method, nn.Module):
             for idx, batch in enumerate(train_loader):
                 if self.preview:
                     X, y_true = batch
+                    X = X.to(device)
+                    y_true = y_true.to(device)
                     y_pred = self.forward(X, None)
                 else:
                     X, y_true, lengths = batch
+                    X = X.to(device)
+                    y_true = y_true.to(device)
+                    lengths = lengths.to(device)
                     y_pred = self.forward(X, lengths)
 
                 # calculate the training loss
