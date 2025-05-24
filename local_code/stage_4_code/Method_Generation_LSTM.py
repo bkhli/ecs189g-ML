@@ -245,6 +245,7 @@ class Method_LSTM(method, nn.Module):
                     )
                 if epoch % 10 == 0 and idx == 0:
                     self.test()
+                    self.train(True)
         loss_tracker.show_graph_loss()
 
     def test(self):
