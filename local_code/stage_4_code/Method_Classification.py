@@ -24,7 +24,7 @@ device = torch.device(
 print("torch running with", device)
 
 
-class Method_GRU(method, nn.Module):
+class Method_RNN(method, nn.Module):
 
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
