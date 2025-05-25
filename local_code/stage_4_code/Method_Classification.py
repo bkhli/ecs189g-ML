@@ -24,7 +24,7 @@ device = torch.device(
 print("torch running with", device)
 
 
-class Method_RNN(method, nn.Module):
+class Method_GRU(method, nn.Module):
 
     # it defines the the MLP model architecture, e.g.,
     # how many layers, size of variables in each layer, activation function, etc.
@@ -53,7 +53,11 @@ class Method_RNN(method, nn.Module):
 
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_dim)
         self.rnn = nn.RNN(
-            self.embedding_dim, self.hidden_size, self.num_layers, batch_first=True
+            self.embedding_dim,
+            self.hidden_size,
+            self.num_layers,
+            batch_first=True,
+            bidirectional=self.bidirectional,
         )
         self.dropout = nn.Dropout(0.5)
         self.fc = nn.Linear(self.hidden_size * (2 if self.bidirectional else 1), 1)
@@ -69,7 +73,10 @@ class Method_RNN(method, nn.Module):
         # Outputs: [batches, seq_len, hidden]
         # Hidden_out: [layers, batches, hidden]
 
-        out = hidden_out[-1]
+        if self.bidirectional:
+            out = torch.cat([hidden_out[-2], hidden_out[-1]], dim=1)
+        else:
+            out = hidden_out[-1]
         out = self.dropout(out)
         logits = self.fc(out)
         return logits.squeeze(1)  # Because they're nested
