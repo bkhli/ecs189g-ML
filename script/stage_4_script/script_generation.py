@@ -2,8 +2,9 @@
 import numpy as np
 import torch
 
-# from local_code.stage_4_code.Dataset_Loader_Generation import Dataset_Loader
-from local_code.stage_4_code.Dataset_Loader_Generation_Incremental import Dataset_Loader
+from local_code.stage_4_code.Dataset_Loader_Generation import Dataset_Loader
+
+# from local_code.stage_4_code.Dataset_Loader_Generation_Incremental import Dataset_Loader
 from local_code.stage_4_code.Evaluate_Accuracy import Evaluate_Accuracy
 from local_code.stage_4_code.Result_Saver import Result_Saver
 from local_code.stage_4_code.Setting_Generation import Setting_Train_Test

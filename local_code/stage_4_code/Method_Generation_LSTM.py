@@ -48,10 +48,10 @@ class Method_LSTM(method, nn.Module):
 
         self.data = None
         # it defines the max rounds to train the model
-        self.max_epoch = 500
+        self.max_epoch = 150
         # it defines the learning rate for gradient descent based optimizer for model learning
-        self.learning_rate = 1e-3
-        self.batch_size = 64
+        self.learning_rate = 3e-5
+        self.batch_size = 2048
 
         assert vocab is not None, "[BUG] vocab is None when passed to Method_MLP"
         # print("[DEBUG] vocab type:", type(vocab))
@@ -152,7 +152,9 @@ class Method_LSTM(method, nn.Module):
         unk_count = 0
         for word, idx in self.vocab.get_stoi().items():
             if word in glove.stoi:
-                self.embedding.weight.data[idx] = glove.vectors[glove.stoi[word]].to(device)
+                self.embedding.weight.data[idx] = glove.vectors[glove.stoi[word]].to(
+                    device
+                )
             else:
                 self.embedding.weight.data[idx] = unk_vector.to(device)
                 unk_count += 1

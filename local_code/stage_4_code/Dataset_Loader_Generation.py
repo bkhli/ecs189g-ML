@@ -13,6 +13,7 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import TweetTokenizer, word_tokenize
+
 ### TORCH TEXT IS LEGACY: pip install torchtext==0.16.0
 # from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
@@ -26,7 +27,7 @@ class Dataset_Loader(dataset):
     data = None
     dataset_source_folder_path = None
     dataset_source_file_name = None
-    preview = 5
+    preview = 3
 
     def __init__(self, dName=None, dDescription=None):
         super().__init__(dName, dDescription)
@@ -47,12 +48,16 @@ class Dataset_Loader(dataset):
         stop_words = set(stopwords.words("english"))
 
         reviewfile = "data"
-        tokenizer = TweetTokenizer() # This one works better. the other one splits "Don't" into "Do" and "n't". Confusing
+        tokenizer = (
+            TweetTokenizer()
+        )  # This one works better. the other one splits "Don't" into "Do" and "n't". Confusing
         with open(f"{parent_path}/{reviewfile}") as f:
             for line in f:
                 # Example line: 1621,"Why was the tomato blushing? Because it saw the salad dressing!"
                 print(line)
-                joke_string = line.split(',"')[1].strip()[:-1].lower() # Strips \n and an ending "
+                joke_string = (
+                    line.split(',"')[1].strip()[:-1].lower()
+                )  # Strips \n and an ending "
                 print(joke_string)
                 while '""' in joke_string:
                     joke_string = joke_string.replace('""', '"')
