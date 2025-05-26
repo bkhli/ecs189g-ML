@@ -34,7 +34,7 @@ class Setting_Train_Test(setting):
 
         # Uncomment below to change with method is used
 
-        method = "RNN"
+        method = "LSTM"
         match method:
             case "RNN":
                 method = Method_RNN(
