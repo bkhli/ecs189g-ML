@@ -35,9 +35,9 @@ class Method_RNN(method, nn.Module):
 
         self.data = None
         # it defines the max rounds to train the model
-        self.max_epoch = 500
+        self.max_epoch = 150
         # it defines the learning rate for gradient descent based optimizer for model learning
-        self.learning_rate = 3e-5
+        self.learning_rate = 5e-3
         self.batch_size = 2048
 
         assert vocab is not None, "[BUG] vocab is None when passed to Method_MLP"
