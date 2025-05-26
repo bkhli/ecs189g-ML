@@ -27,7 +27,7 @@ class Dataset_Loader(dataset):
     data = None
     dataset_source_folder_path = None
     dataset_source_file_name = None
-    preview = 6
+    preview = 3
 
     def __init__(self, dName=None, dDescription=None):
         super().__init__(dName, dDescription)
