@@ -1,0 +1,154 @@
+'''
+Concrete MethodModule class for a specific learning MethodModule
+
+'''
+
+# Right now, mostly copied from stage 3 and source code provided for stage 5
+# refer back to stage 3 for how to modify stuff
+
+# Copyright (c) 2017-Current Jiawei Zhang <jiawei@ifmlab.org>
+# License: TBD
+
+from local_code.base_class.method import method
+from local_code.stage_5_code.Evaluate_Accuracy import Evaluate_Accuracy
+from local_code.stage_5_code.Graph_Loss import TrainLoss
+import torch
+from torch import nn
+import numpy as np
+from icecream import ic
+
+import torch.nn.functional as F
+from local_code.stage_5_code.Layers import GraphConvolutionLayer
+# will probably have to add code from here
+
+
+import math
+
+from torch.nn.parameter import Parameter
+from torch.nn.modules.module import Module
+
+# device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+# print("torch running with", device)
+
+
+# only working for cpu right now
+torch.set_default_device("cpu")
+
+
+
+
+class GCN(nn.Module):
+    data = None
+    # it defines the max rounds to train the model
+    max_epoch = 300
+    # it defines the learning rate for gradient descent based optimizer for model learning
+    learning_rate = 1e-2
+    def __init__(self, nfeat, nhid, nclass, dropout):
+        super(GCN, self).__init__()
+
+        self.gc1 = GraphConvolutionLayer(nfeat, nhid)
+        self.gc2 = GraphConvolutionLayer(nhid, nclass)
+        self.dropout = dropout
+
+        self.method_name = "GCN"
+
+    def forward(self, x, adj):
+        x = F.relu(self.gc1(x, adj))
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = self.gc2(x, adj)
+        return F.log_softmax(x, dim=1)
+    
+    def train(self):
+        # stuff
+        #x = torch.FloatTensor(np.array(x))#.to(device)
+        # convert y to torch.tensor as well
+        #y_true = torch.LongTensor(np.array(y))#.to(device)
+
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=0.0005)
+        loss_function = F.nll_loss
+
+        # Note - try this later
+        #loss_function = nn.CrossEntropyLoss
+
+        accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
+
+
+        loss_tracker = TrainLoss()
+
+        for epoch in range(self.max_epoch):
+            #y_pred = self.forward(x, adj=self.data['adj'])
+            idx_train = self.data['train_test']['idx_train']
+
+
+            # this is like a layer:
+            # not what was in the source code so change it???
+            output = self.forward(self.data['graph']['X'], self.data['graph']['utility']['A'])
+            # print(output)
+
+            y_pred = output[idx_train]
+            y_true =  self.data['graph']['y'][idx_train]
+            train_loss = loss_function(y_pred, y_true)
+            optimizer.zero_grad()
+            train_loss.backward()
+            optimizer.step()
+
+            if epoch%5 ==0:
+                loss_tracker.add_epoch(epoch, train_loss.item())
+            if epoch%100 == 0:
+                accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                # f1_evaluator_none.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                # f1_evaluator_macro.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                # f1_evaluator_micro.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                # f1_evaluator_weighted.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                # print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Mutlilabel Classification:', f1_evaluator_none.evaluate(),
+                #       'F1 Score - Macro:', f1_evaluator_macro.evaluate(), 'F1 Score - Micro:', f1_evaluator_micro.evaluate(),
+                #       'F1 Score - Weighted:', f1_evaluator_weighted.evaluate(), 'Loss:', train_loss.item())
+                print(
+                    f"\nEpoch: {epoch} | Train Accuracy: {accuracy_evaluator.evaluate():.4f} | Loss: {train_loss.item():.4f}\n"
+                    f"F1 Scores:\n"
+                    # f"\tIndividual: {[f'{score:.4f}' for score in f1_evaluator_none.evaluate()]}\n"
+                    # f"\tMacro:     {f1_evaluator_macro.evaluate():.4f}\n"
+                    # f"\tMicro:     {f1_evaluator_micro.evaluate():.4f}\n"
+                    # f"\tWeighted:  {f1_evaluator_micro.evaluate():.4f}"
+                )
+        loss_tracker.show_graph_loss()
+
+    def test(self):
+        #stuff
+
+
+        # Issue is here, figure out where graph is getting returned from setting
+        # i.e., where Setting is getting called
+
+
+        # y_pred = self.forward(torch.FloatTensor(np.array(x)))#.to(device))
+        # # convert the probability distributions to the corresponding labels
+        # # instances will get the labels corresponding to the largest probability
+
+        # return y_pred.max(1)[1].cpu()
+
+        # output = model(features, adj)
+        output = self.forward(self.data['graph']['X'], self.data['graph']['utility']['A'])
+        idx_test = self.data['train_test']['idx_test']
+        y_pred = output[idx_test]
+        #return y_pred
+        return y_pred.max(1)[1].cpu()
+
+    # pasted this from earlier stages, may need to edit
+    def run(self):
+        print('method running...')
+        print('--start training...')
+
+        # figure out what to pass in; will need to change agruments
+        # also may need to change method.data arguments in Setting.py
+        # we do have to give this more - 
+        #self.train(self.data['train']['X'], self.data['train']['y'])
+
+        # just give it access to everything
+        self.train()
+
+        print('--start testing...')
+        # pred_y = self.test(self.data['test']['X'])
+        pred_y = self.test()
+        idx_test = self.data['train_test']['idx_test']
+        return {'pred_y': pred_y, 'true_y': self.data['graph']['y'][idx_test]}
