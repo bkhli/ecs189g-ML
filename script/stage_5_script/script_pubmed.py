@@ -19,18 +19,14 @@ if 1:
 
     # ---- objection initialization setction ---------------
     data_obj = Dataset_Loader('', '')
-    # Note - might need to change paths, but it seems like it should be this?
     data_obj.dataset_source_folder_path = 'data/stage_5_data/pubmed'
     data_obj.dataset_name = 'pubmed'
 
-    # Come back to this
-    # Oh, this is how it passes into the method function
     method_obj = GCN(nfeat=500,
-            nhid=16,
+            nhid=64,
             nclass=3,
-            dropout=0.5)
-
-    # probably don't need to change anything?
+            dropout=0.2)
+    
     result_obj = Result_Saver('saver', '')
     result_obj.result_destination_folder_path = 'result/stage_5_result/MLP_'
     result_obj.result_destination_file_name = 'prediction_result'

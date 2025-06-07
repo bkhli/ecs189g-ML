@@ -23,14 +23,11 @@ if 1:
     data_obj.dataset_source_folder_path = 'data/stage_5_data/cora'
     data_obj.dataset_name = 'cora'
 
-    # Come back to this
-    # Oh, this is how it passes into the method function
     method_obj = GCN(nfeat=1433,
             nhid=16,
             nclass=7,
-            dropout=0.5)
+            dropout=0.2)
 
-    # probably don't need to change anything?
     result_obj = Result_Saver('saver', '')
     result_obj.result_destination_folder_path = 'result/stage_5_result/MLP_'
     result_obj.result_destination_file_name = 'prediction_result'

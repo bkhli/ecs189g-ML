@@ -28,6 +28,15 @@ class Dataset_Loader(dataset):
         r_mat_inv = sp.diags(r_inv)
         mx = r_mat_inv.dot(mx).dot(r_mat_inv)
         return mx
+    
+    def normalize(self, mx):
+        """Row-normalize sparse matrix"""
+        rowsum = np.array(mx.sum(1))
+        r_inv = np.power(rowsum, -1).flatten()
+        r_inv[np.isinf(r_inv)] = 0.
+        r_mat_inv = sp.diags(r_inv)
+        mx = r_mat_inv.dot(mx)
+        return mx
 
     def sparse_mx_to_torch_sparse_tensor(self, sparse_mx):
         """Convert a sparse matrix to a torch sparse tensor."""
@@ -62,10 +71,17 @@ class Dataset_Loader(dataset):
         edges = np.array(list(map(idx_map.get, edges_unordered.flatten())), dtype=np.int32).reshape(edges_unordered.shape)
         adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])), shape=(onehot_labels.shape[0], onehot_labels.shape[0]), dtype=np.float32)
         adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
-        norm_adj = self.adj_normalize(adj + sp.eye(adj.shape[0]))
+
+        # different normalization functions work better for different datasets
+        # maybe this can be adjusted
+        norm_adj = self.normalize(adj + sp.eye(adj.shape[0]))
+        if self.dataset_name == 'cora':
+            norm_adj = self.adj_normalize(adj + sp.eye(adj.shape[0]))
+            
 
         # convert to pytorch tensors
         features = torch.FloatTensor(np.array(features.todense()))
+        #features = self.normalize(features + sp.eye(features.shape))
         labels = torch.LongTensor(np.where(onehot_labels)[1])
         adj = self.sparse_mx_to_torch_sparse_tensor(norm_adj)
 
@@ -77,7 +93,7 @@ class Dataset_Loader(dataset):
 
 
         # the following part, you can either put them into the setting class or you can leave them in the dataset loader
-        # the following train, test, val index are just examples, sample the train, test according to project requirements
+        # keeping these in Dataset Loader
         if self.dataset_name == 'cora':
             idx_feature_mapping = {(1, 0, 0, 0, 0, 0, 0) : [],
                                 (0, 1, 0, 0, 0, 0, 0) : [],
@@ -131,14 +147,6 @@ class Dataset_Loader(dataset):
         idx_train = torch.LongTensor(idx_train)
         idx_test = torch.LongTensor(idx_test)
 
-
-
-
-
-
         train_test = {'idx_train': idx_train, 'idx_test': idx_test}
         graph = {'node': idx_map, 'edge': edges, 'X': features, 'y': labels, 'utility': {'A': adj, 'reverse_idx': reverse_idx_map}}
         return {'graph': graph, 'train_test': train_test}
-
-        # graph = {'node': idx_map, 'edge': edges, 'X': features, 'y': labels, 'utility': {'A': adj, 'reverse_idx': reverse_idx_map}}
-        # return graph

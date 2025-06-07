@@ -19,13 +19,13 @@ from icecream import ic
 
 import torch.nn.functional as F
 from local_code.stage_5_code.Layers import GraphConvolutionLayer
-# will probably have to add code from here
 
 
 import math
 
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
+
 
 # device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 # print("torch running with", device)
@@ -40,7 +40,7 @@ torch.set_default_device("cpu")
 class GCN(nn.Module):
     data = None
     # it defines the max rounds to train the model
-    max_epoch = 300
+    max_epoch = 200
     # it defines the learning rate for gradient descent based optimizer for model learning
     learning_rate = 1e-2
     def __init__(self, nfeat, nhid, nclass, dropout):
@@ -59,16 +59,12 @@ class GCN(nn.Module):
         return F.log_softmax(x, dim=1)
     
     def train(self):
-        # stuff
-        #x = torch.FloatTensor(np.array(x))#.to(device)
-        # convert y to torch.tensor as well
-        #y_true = torch.LongTensor(np.array(y))#.to(device)
 
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=0.0005)
         loss_function = F.nll_loss
 
         # Note - try this later
-        #loss_function = nn.CrossEntropyLoss
+        # loss_function = nn.CrossEntropyLoss
 
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
 
@@ -76,14 +72,10 @@ class GCN(nn.Module):
         loss_tracker = TrainLoss()
 
         for epoch in range(self.max_epoch):
-            #y_pred = self.forward(x, adj=self.data['adj'])
             idx_train = self.data['train_test']['idx_train']
 
-
             # this is like a layer:
-            # not what was in the source code so change it???
             output = self.forward(self.data['graph']['X'], self.data['graph']['utility']['A'])
-            # print(output)
 
             y_pred = output[idx_train]
             y_true =  self.data['graph']['y'][idx_train]
@@ -114,41 +106,21 @@ class GCN(nn.Module):
         loss_tracker.show_graph_loss()
 
     def test(self):
-        #stuff
 
-
-        # Issue is here, figure out where graph is getting returned from setting
-        # i.e., where Setting is getting called
-
-
-        # y_pred = self.forward(torch.FloatTensor(np.array(x)))#.to(device))
-        # # convert the probability distributions to the corresponding labels
-        # # instances will get the labels corresponding to the largest probability
-
-        # return y_pred.max(1)[1].cpu()
-
-        # output = model(features, adj)
         output = self.forward(self.data['graph']['X'], self.data['graph']['utility']['A'])
         idx_test = self.data['train_test']['idx_test']
         y_pred = output[idx_test]
-        #return y_pred
         return y_pred.max(1)[1].cpu()
 
-    # pasted this from earlier stages, may need to edit
+
     def run(self):
         print('method running...')
         print('--start training...')
 
-        # figure out what to pass in; will need to change agruments
-        # also may need to change method.data arguments in Setting.py
-        # we do have to give this more - 
-        #self.train(self.data['train']['X'], self.data['train']['y'])
-
-        # just give it access to everything
+        # just give it access to everything, since the layers need adjacency matrix
         self.train()
 
         print('--start testing...')
-        # pred_y = self.test(self.data['test']['X'])
         pred_y = self.test()
         idx_test = self.data['train_test']['idx_test']
         return {'pred_y': pred_y, 'true_y': self.data['graph']['y'][idx_test]}
