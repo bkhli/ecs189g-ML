@@ -106,7 +106,7 @@ class Dataset_Loader(dataset):
                 idx_feature_mapping[tuple(onehot_labels[i])].append(i)
             for key in idx_feature_mapping:
                 sampled_set = set(random.sample(idx_feature_mapping[key], 20))
-                complement = set(idx_feature_mapping[key]) - sampled_set
+                complement = set(random.sample(list(set(idx_feature_mapping[key]) - sampled_set), 150))
                 idx_train.extend(sampled_set)
                 idx_test.extend(complement)
             
@@ -121,7 +121,7 @@ class Dataset_Loader(dataset):
                 idx_feature_mapping[tuple(onehot_labels[i])].append(i)
             for key in idx_feature_mapping:
                 sampled_set = set(random.sample(idx_feature_mapping[key], 20))
-                complement = set(idx_feature_mapping[key]) - sampled_set
+                complement = set(random.sample(list(set(idx_feature_mapping[key]) - sampled_set), 200))
                 idx_train.extend(sampled_set)
                 idx_test.extend(complement)
         elif self.dataset_name == 'pubmed':
@@ -132,7 +132,7 @@ class Dataset_Loader(dataset):
                 idx_feature_mapping[tuple(onehot_labels[i])].append(i)
             for key in idx_feature_mapping:
                 sampled_set = set(random.sample(idx_feature_mapping[key], 20))
-                complement = set(idx_feature_mapping[key]) - sampled_set
+                complement = set(random.sample(list(set(idx_feature_mapping[key]) - sampled_set), 200))
                 idx_train.extend(sampled_set)
                 idx_test.extend(complement)
         #---- cora-small is a toy dataset I hand crafted for debugging purposes ---
