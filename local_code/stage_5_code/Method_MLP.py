@@ -54,9 +54,9 @@ class GCN(nn.Module):
 
         self.method_name = "GCN"
 
-    def forward(self, x, adj):
+    def forward(self, x, adj, is_training=True):
         x = F.relu(self.gc1(x, adj))
-        x = F.dropout(x, self.dropout, training=self.training)
+        x = F.dropout(x, self.dropout, training=is_training)
         x = self.gc2(x, adj)
         return F.log_softmax(x, dim=1)
     
@@ -132,8 +132,7 @@ class GCN(nn.Module):
 
 
     def test(self):
-
-        output = self.forward(self.data['graph']['X'], self.data['graph']['utility']['A'])
+        output = self.forward(self.data['graph']['X'], self.data['graph']['utility']['A'], is_training=False)
         idx_test = self.data['train_test']['idx_test']
         y_pred = output[idx_test]
         return y_pred.max(1)[1].cpu()
