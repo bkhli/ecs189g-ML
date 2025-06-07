@@ -20,6 +20,8 @@ from icecream import ic
 import torch.nn.functional as F
 from local_code.stage_5_code.Layers import GraphConvolutionLayer
 
+import numpy as np
+from matplotlib import pyplot as plt
 
 import math
 
@@ -66,7 +68,11 @@ class GCN(nn.Module):
         # Note - try this later
         # loss_function = nn.CrossEntropyLoss
 
+        train_acc_lst = []
+        test_acc_lst = []
+
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
+        test_accuracy_evaluator = Evaluate_Accuracy('test evaluator', '')
 
 
         loss_tracker = TrainLoss()
@@ -84,8 +90,16 @@ class GCN(nn.Module):
             train_loss.backward()
             optimizer.step()
 
-            if epoch%5 ==0:
+            if epoch%1 == 0:
                 loss_tracker.add_epoch(epoch, train_loss.item())
+                accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
+                test_accuracy_evaluator.data = {'true_y': self.data['graph']['y'][self.data['train_test']['idx_test']].cpu(), 'pred_y': self.test()}
+                train_acc = accuracy_evaluator.evaluate()
+                test_acc = test_accuracy_evaluator.evaluate()
+                
+                train_acc_lst.append(train_acc)
+                test_acc_lst.append(test_acc)
+
             if epoch%100 == 0:
                 accuracy_evaluator.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
                 # f1_evaluator_none.data = {'true_y': y_true.cpu(), 'pred_y': y_pred.max(1)[1].cpu()}
@@ -104,6 +118,18 @@ class GCN(nn.Module):
                     # f"\tWeighted:  {f1_evaluator_micro.evaluate():.4f}"
                 )
         loss_tracker.show_graph_loss()
+
+        # plot the accuracy at the end of trainning
+        plt.plot(train_acc_lst, label="train")
+        plt.plot(test_acc_lst, label="test")
+
+        plt.xlabel('Epoch')
+        plt.ylabel('Accuracy')
+        plt.title('Training and Testing Accuracy')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
 
     def test(self):
 
